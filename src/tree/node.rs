@@ -51,9 +51,9 @@ impl Node {
     /// There are three parameters:
     /// - char_idx: the chunk that contains this char is fetched,
     /// - node_info: this is the text info of the node it's being called on.
-    ///              This makes it a little awkward to call, but is needed since
-    ///              it's actually the parent node that contains the text info,
-    ///              so the info needs to be passed in.
+    ///   This makes it a little awkward to call, but is needed since
+    ///   it's actually the parent node that contains the text info,
+    ///   fso the info needs to be passed in.
     /// - edit: the closure that receives the chunk and does the edits.
     ///
     /// The closure is effectively the termination case for the recursion,
@@ -253,7 +253,7 @@ impl Node {
                     children.search_char_idx_range(start_idx, end_idx);
 
                 // Both indices point into the same child
-                if l_child_i == r_child_i {
+                return if l_child_i == r_child_i {
                     let info = children.info()[l_child_i];
                     let (seam, mut needs_fix, new_info) =
                         handle_child(children, l_child_i, l_char_acc);
@@ -268,7 +268,7 @@ impl Node {
                         }
                     }
 
-                    return (node_info - info + new_info, seam, needs_fix);
+                    (node_info - info + new_info, seam, needs_fix)
                 }
                 // We're dealing with more than one child.
                 else {
@@ -316,7 +316,7 @@ impl Node {
                     }
 
                     // Return
-                    return (children.combined_info(), seam, needs_fix);
+                    (children.combined_info(), seam, needs_fix)
                 }
             }
         }
@@ -355,16 +355,16 @@ impl Node {
             let residual =
                 Arc::make_mut(&mut children.nodes_mut()[last_i]).append_at_depth(other, depth - 1);
             children.update_child_info(last_i);
-            if let Some(extra_node) = residual {
+            return if let Some(extra_node) = residual {
                 if children.len() < MAX_CHILDREN {
                     children.push((extra_node.text_info(), extra_node));
-                    return None;
+                    None
                 } else {
                     let r_children = children.push_split((extra_node.text_info(), extra_node));
-                    return Some(Arc::new(Node::Internal(r_children)));
+                    Some(Arc::new(Node::Internal(r_children)))
                 }
             } else {
-                return None;
+                None
             }
         } else {
             panic!("Reached leaf before getting to target depth.");
@@ -403,18 +403,18 @@ impl Node {
             let residual =
                 Arc::make_mut(&mut children.nodes_mut()[0]).prepend_at_depth(other, depth - 1);
             children.update_child_info(0);
-            if let Some(extra_node) = residual {
+            return if let Some(extra_node) = residual {
                 if children.len() < MAX_CHILDREN {
                     children.insert(0, (extra_node.text_info(), extra_node));
-                    return None;
+                    None
                 } else {
                     let mut r_children =
                         children.insert_split(0, (extra_node.text_info(), extra_node));
                     std::mem::swap(children, &mut r_children);
-                    return Some(Arc::new(Node::Internal(r_children)));
+                    Some(Arc::new(Node::Internal(r_children)))
                 }
             } else {
-                return None;
+                None
             }
         } else {
             panic!("Reached leaf before getting to target depth.");
@@ -712,7 +712,7 @@ impl Node {
             Node::Leaf(ref text) => {
                 // Leaf size
                 if !is_root {
-                    assert!(text.len() > 0);
+                    assert!(!text.is_empty());
                 }
             }
             Node::Internal(ref children) => {

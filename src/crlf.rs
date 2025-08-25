@@ -86,11 +86,11 @@ pub fn nearest_internal_break(byte_idx: usize, text: &[u8]) -> usize {
 
     // Otherwise, return the closest of left and right that isn't the
     // start or end of the string
-    if left == 0 || (right != text.len() && (byte_idx - left) >= (right - byte_idx)) {
-        return right;
+    return if left == 0 || (right != text.len() && (byte_idx - left) >= (right - byte_idx)) {
+        right
     } else {
-        return left;
-    }
+        left
+    };
 }
 
 #[inline]

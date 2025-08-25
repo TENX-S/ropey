@@ -201,13 +201,13 @@ impl RopeBuilder {
 
         // Simplest case: empty buffer and enough in `text` for a full
         // chunk, so just chop a chunk off from `text` and use that.
-        if self.buffer.is_empty() && text.len() >= MAX_BYTES {
+        return if self.buffer.is_empty() && text.len() >= MAX_BYTES {
             let split_idx = crlf::find_good_split(
                 MAX_BYTES.min(text.len() - 1), // - 1 to avoid CRLF split.
                 text.as_bytes(),
                 true,
             );
-            return (NextText::String(&text[..split_idx]), &text[split_idx..]);
+            (NextText::String(&text[..split_idx]), &text[split_idx..])
         }
         // If the buffer + `text` is enough for a full chunk, push enough
         // of `text` onto the buffer to fill it and use that.
@@ -219,29 +219,29 @@ impl RopeBuilder {
                 split_idx -= 1;
             };
             self.buffer.push_str(&text[..split_idx]);
-            return (NextText::UseBuffer, &text[split_idx..]);
+            (NextText::UseBuffer, &text[split_idx..])
         }
         // If we don't have enough text for a full chunk.
         else {
             // If it's our last chunk, wrap it all up!
             if is_last_chunk {
                 if self.buffer.is_empty() {
-                    return if text.is_empty() {
+                    if text.is_empty() {
                         (NextText::None, "")
                     } else {
                         (NextText::String(text), "")
-                    };
+                    }
                 } else {
                     self.buffer.push_str(text);
-                    return (NextText::UseBuffer, "");
+                    (NextText::UseBuffer, "")
                 }
             }
             // Otherwise, just push to the buffer.
             else {
                 self.buffer.push_str(text);
-                return (NextText::None, "");
+                (NextText::None, "")
             }
-        }
+        };
     }
 
     fn append_leaf_node(&mut self, leaf: Arc<Node>) {

@@ -89,15 +89,11 @@ pub struct Bytes<'a> {
 }
 
 impl<'a> Bytes<'a> {
-    pub(crate) fn new(node: &Arc<Node>) -> Bytes {
+    pub(crate) fn new(node: &'_ Arc<Node>) -> Bytes<'_> {
         let mut chunk_iter = Chunks::new(node);
-        let cur_chunk = if let Some(chunk) = chunk_iter.next() {
-            chunk
-        } else {
-            ""
-        };
+        let cur_chunk = chunk_iter.next().unwrap_or_default();
         Bytes {
-            chunk_iter: chunk_iter,
+            chunk_iter,
             cur_chunk: cur_chunk.as_bytes(),
             byte_idx: 0,
             last_call_was_prev_impl: false,
@@ -109,11 +105,11 @@ impl<'a> Bytes<'a> {
 
     #[inline(always)]
     pub(crate) fn new_with_range(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         byte_idx_range: (usize, usize),
         char_idx_range: (usize, usize),
         line_break_idx_range: (usize, usize),
-    ) -> Bytes {
+    ) -> Bytes<'_> {
         Bytes::new_with_range_at(
             node,
             byte_idx_range.0,
@@ -124,12 +120,12 @@ impl<'a> Bytes<'a> {
     }
 
     pub(crate) fn new_with_range_at(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         at_byte: usize,
         byte_idx_range: (usize, usize),
         char_idx_range: (usize, usize),
         line_break_idx_range: (usize, usize),
-    ) -> Bytes {
+    ) -> Bytes<'_> {
         let (mut chunk_iter, mut chunk_byte_start, _, _) = Chunks::new_with_range_at_byte(
             node,
             at_byte,
@@ -150,7 +146,7 @@ impl<'a> Bytes<'a> {
         };
 
         Bytes {
-            chunk_iter: chunk_iter,
+            chunk_iter,
             cur_chunk: cur_chunk.as_bytes(),
             byte_idx: at_byte - chunk_byte_start,
             last_call_was_prev_impl: false,
@@ -161,21 +157,17 @@ impl<'a> Bytes<'a> {
     }
 
     #[inline(always)]
-    pub(crate) fn from_str(text: &str) -> Bytes {
+    pub(crate) fn from_str(text: &'_ str) -> Bytes<'_> {
         Bytes::from_str_at(text, 0)
     }
 
-    pub(crate) fn from_str_at(text: &str, byte_idx: usize) -> Bytes {
+    pub(crate) fn from_str_at(text: &'_ str, byte_idx: usize) -> Bytes<'_> {
         let mut chunk_iter = Chunks::from_str(text, false);
-        let cur_chunk = if let Some(chunk) = chunk_iter.next() {
-            chunk
-        } else {
-            ""
-        };
+        let cur_chunk = chunk_iter.next().unwrap_or_default();
         Bytes {
-            chunk_iter: chunk_iter,
+            chunk_iter,
             cur_chunk: cur_chunk.as_bytes(),
-            byte_idx: byte_idx,
+            byte_idx,
             last_call_was_prev_impl: false,
             bytes_total: text.len(),
             bytes_remaining: text.len() - byte_idx,
@@ -316,16 +308,12 @@ pub struct Chars<'a> {
 }
 
 impl<'a> Chars<'a> {
-    pub(crate) fn new(node: &Arc<Node>) -> Chars {
+    pub(crate) fn new(node: &'_ Arc<Node>) -> Chars<'_> {
         let mut chunk_iter = Chunks::new(node);
-        let cur_chunk = if let Some(chunk) = chunk_iter.next() {
-            chunk
-        } else {
-            ""
-        };
+        let cur_chunk = chunk_iter.next().unwrap_or_default();
         Chars {
-            chunk_iter: chunk_iter,
-            cur_chunk: cur_chunk,
+            chunk_iter,
+            cur_chunk,
             byte_idx: 0,
             last_call_was_prev_impl: false,
             chars_total: node.text_info().chars as usize,
@@ -336,11 +324,11 @@ impl<'a> Chars<'a> {
 
     #[inline(always)]
     pub(crate) fn new_with_range(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         byte_idx_range: (usize, usize),
         char_idx_range: (usize, usize),
         line_break_idx_range: (usize, usize),
-    ) -> Chars {
+    ) -> Chars<'_> {
         Chars::new_with_range_at(
             node,
             char_idx_range.0,
@@ -351,12 +339,12 @@ impl<'a> Chars<'a> {
     }
 
     pub(crate) fn new_with_range_at(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         at_char: usize,
         byte_idx_range: (usize, usize),
         char_idx_range: (usize, usize),
         line_break_idx_range: (usize, usize),
-    ) -> Chars {
+    ) -> Chars<'_> {
         let (mut chunk_iter, _, mut chunk_char_start, _) = Chunks::new_with_range_at_char(
             node,
             at_char,
@@ -378,8 +366,8 @@ impl<'a> Chars<'a> {
         };
 
         Chars {
-            chunk_iter: chunk_iter,
-            cur_chunk: cur_chunk,
+            chunk_iter,
+            cur_chunk,
             byte_idx: char_to_byte_idx(cur_chunk, at_char - chunk_char_start),
             last_call_was_prev_impl: false,
             chars_total: char_idx_range.1 - char_idx_range.0,
@@ -389,27 +377,23 @@ impl<'a> Chars<'a> {
     }
 
     #[inline(always)]
-    pub(crate) fn from_str(text: &str) -> Chars {
+    pub(crate) fn from_str(text: &'_ str) -> Chars<'_> {
         Chars::from_str_at(text, 0)
     }
 
-    pub(crate) fn from_str_at(text: &str, char_idx: usize) -> Chars {
+    pub(crate) fn from_str_at(text: &'_ str, char_idx: usize) -> Chars<'_> {
         let mut chunk_iter = Chunks::from_str(text, false);
-        let cur_chunk = if let Some(chunk) = chunk_iter.next() {
-            chunk
-        } else {
-            ""
-        };
+        let cur_chunk = chunk_iter.next().unwrap_or_default();
         let start_byte_idx = char_to_byte_idx(text, char_idx);
         let chars_remaining = count_chars(&text[start_byte_idx..]);
 
         Chars {
-            chunk_iter: chunk_iter,
-            cur_chunk: cur_chunk,
+            chunk_iter,
+            cur_chunk,
             byte_idx: start_byte_idx,
             last_call_was_prev_impl: false,
             chars_total: chars_remaining + count_chars(&text[..start_byte_idx]),
-            chars_remaining: chars_remaining,
+            chars_remaining,
             is_reversed: false,
         }
     }
@@ -479,7 +463,7 @@ impl<'a> Chars<'a> {
             self.byte_idx -= 1;
         }
         self.chars_remaining += 1;
-        return (&self.cur_chunk[self.byte_idx..]).chars().next();
+        return self.cur_chunk[self.byte_idx..].chars().next();
     }
 
     #[inline]
@@ -508,7 +492,7 @@ impl<'a> Chars<'a> {
             self.byte_idx += 1;
         }
         self.chars_remaining -= 1;
-        return (&self.cur_chunk[start..]).chars().next();
+        return self.cur_chunk[start..].chars().next();
     }
 }
 
@@ -580,7 +564,7 @@ enum LinesEnum<'a> {
 
 impl<'a> Lines<'a> {
     #[inline(always)]
-    pub(crate) fn new(node: &Arc<Node>) -> Lines {
+    pub(crate) fn new(node: &'_ Arc<Node>) -> Lines<'_> {
         let info = node.text_info();
         Lines::new_with_range_at(
             node,
@@ -592,19 +576,19 @@ impl<'a> Lines<'a> {
 
     #[inline(always)]
     pub(crate) fn new_with_range(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         byte_idx_range: (usize, usize),
         line_idx_range: (usize, usize),
-    ) -> Lines {
+    ) -> Lines<'_> {
         Lines::new_with_range_at(node, line_idx_range.0, byte_idx_range, line_idx_range)
     }
 
     pub(crate) fn new_with_range_at(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         line: usize,
         byte_idx_range: (usize, usize),
         line_idx_range: (usize, usize),
-    ) -> Lines {
+    ) -> Lines<'_> {
         debug_assert!(node.is_char_boundary(byte_idx_range.0));
         debug_assert!(node.is_char_boundary(byte_idx_range.1));
         debug_assert!(line >= line_idx_range.0);
@@ -696,16 +680,16 @@ impl<'a> Lines<'a> {
     ///
     /// This is only exposed publicly for use in property testing.
     #[doc(hidden)]
-    pub fn from_str_pt(text: &str) -> Lines {
+    pub fn from_str_pt(text: &'_ str) -> Lines<'_> {
         let line_count = byte_to_line_idx(text, text.len()) + 1;
         Lines::from_str(text, line_count)
     }
 
-    pub(crate) fn from_str(text: &str, lines: usize) -> Lines {
+    pub(crate) fn from_str(text: &'_ str, lines: usize) -> Lines<'_> {
         Lines {
             iter: LinesEnum::Light,
             is_reversed: false,
-            text: text,
+            text,
             byte_idx: 0,
             at_end: false,
             line_idx: 0,
@@ -713,11 +697,11 @@ impl<'a> Lines<'a> {
         }
     }
 
-    pub(crate) fn from_str_at(text: &str, line: usize, lines: usize) -> Lines {
+    pub(crate) fn from_str_at(text: &'_ str, line: usize, lines: usize) -> Lines<'_> {
         Lines {
             iter: LinesEnum::Light,
             is_reversed: false,
-            text: text,
+            text,
             byte_idx: line_to_byte_idx(text, line),
             at_end: line >= lines,
             line_idx: line.min(lines),
@@ -1293,7 +1277,7 @@ enum ChunksEnum<'a> {
 
 impl<'a> Chunks<'a> {
     #[inline(always)]
-    pub(crate) fn new(node: &Arc<Node>) -> Chunks {
+    pub(crate) fn new(node: &'_ Arc<Node>) -> Chunks<'_> {
         let info = node.text_info();
         Chunks::new_with_range_at_byte(
             node,
@@ -1307,11 +1291,11 @@ impl<'a> Chunks<'a> {
 
     #[inline(always)]
     pub(crate) fn new_with_range(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         byte_idx_range: (usize, usize),
         char_idx_range: (usize, usize),
         line_break_idx_range: (usize, usize),
-    ) -> Chunks {
+    ) -> Chunks<'_> {
         Chunks::new_with_range_at_byte(
             node,
             byte_idx_range.0,
@@ -1338,12 +1322,12 @@ impl<'a> Chunks<'a> {
     /// Returns the iterator and the byte/char/line index of its start relative
     /// to the start of the node.
     pub(crate) fn new_with_range_at_byte(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         at_byte: usize,
         byte_idx_range: (usize, usize),
         char_idx_range: (usize, usize),
         line_break_idx_range: (usize, usize),
-    ) -> (Chunks, usize, usize, usize) {
+    ) -> (Chunks<'_>, usize, usize, usize) {
         debug_assert!(at_byte >= byte_idx_range.0);
         debug_assert!(at_byte <= byte_idx_range.1);
 
@@ -1370,11 +1354,11 @@ impl<'a> Chunks<'a> {
         // If root is a leaf, return light version of the iter.
         if node.is_leaf() {
             let text = &node.leaf_text()[start_byte..end_byte];
-            if at_byte == end_byte {
-                return (
+            return if at_byte == end_byte {
+                (
                     Chunks {
                         iter: ChunksEnum::Light {
-                            text: text,
+                            text,
                             is_end: true,
                         },
                         is_reversed: false,
@@ -1382,12 +1366,12 @@ impl<'a> Chunks<'a> {
                     text.len(),
                     count_chars(text),
                     byte_to_line_idx(text, text.len()),
-                );
+                )
             } else {
-                return (
+                (
                     Chunks {
                         iter: ChunksEnum::Light {
-                            text: text,
+                            text,
                             is_end: false,
                         },
                         is_reversed: false,
@@ -1395,7 +1379,7 @@ impl<'a> Chunks<'a> {
                     0,
                     0,
                     0,
-                );
+                )
             }
         }
 
@@ -1420,7 +1404,7 @@ impl<'a> Chunks<'a> {
                                 utf16_surrogates: 0, // Bogus value, not needed
                                 line_breaks: line_break_idx_range.1 as u64 - 1,
                             };
-                            (*node_stack.last_mut().unwrap()).1 += 1;
+                            node_stack.last_mut().unwrap().1 += 1;
                         }
                         break;
                     }
@@ -1440,9 +1424,9 @@ impl<'a> Chunks<'a> {
         (
             Chunks {
                 iter: ChunksEnum::Full {
-                    node_stack: node_stack,
+                    node_stack,
                     total_bytes: end_byte - start_byte,
-                    byte_idx: byte_idx,
+                    byte_idx,
                 },
                 is_reversed: false,
             },
@@ -1454,12 +1438,12 @@ impl<'a> Chunks<'a> {
 
     #[inline(always)]
     pub(crate) fn new_with_range_at_char(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         at_char: usize,
         byte_idx_range: (usize, usize),
         char_idx_range: (usize, usize),
         line_break_idx_range: (usize, usize),
-    ) -> (Chunks, usize, usize, usize) {
+    ) -> (Chunks<'_>, usize, usize, usize) {
         let at_byte = if at_char == char_idx_range.1 {
             byte_idx_range.1
         } else {
@@ -1477,12 +1461,12 @@ impl<'a> Chunks<'a> {
 
     #[inline(always)]
     pub(crate) fn new_with_range_at_line_break(
-        node: &Arc<Node>,
+        node: &'_ Arc<Node>,
         at_line_break: usize,
         byte_idx_range: (usize, usize),
         char_idx_range: (usize, usize),
         line_break_idx_range: (usize, usize),
-    ) -> (Chunks, usize, usize, usize) {
+    ) -> (Chunks<'_>, usize, usize, usize) {
         let at_byte = if at_line_break == line_break_idx_range.1 {
             byte_idx_range.1
         } else {
@@ -1498,10 +1482,10 @@ impl<'a> Chunks<'a> {
         )
     }
 
-    pub(crate) fn from_str(text: &str, at_end: bool) -> Chunks {
+    pub(crate) fn from_str(text: &'_ str, at_end: bool) -> Chunks<'_> {
         Chunks {
             iter: ChunksEnum::Light {
-                text: text,
+                text,
                 is_end: at_end,
             },
             is_reversed: false,
@@ -1549,14 +1533,14 @@ impl<'a> Chunks<'a> {
     }
 
     fn prev_impl(&mut self) -> Option<&'a str> {
-        match *self {
+        return match *self {
             Chunks {
                 iter:
-                    ChunksEnum::Full {
-                        ref mut node_stack,
-                        total_bytes,
-                        ref mut byte_idx,
-                    },
+                ChunksEnum::Full {
+                    ref mut node_stack,
+                    total_bytes,
+                    ref mut byte_idx,
+                },
                 ..
             } => {
                 if *byte_idx <= 0 {
@@ -1584,7 +1568,7 @@ impl<'a> Chunks<'a> {
                 }
 
                 // Fetch the node and child index.
-                let (node, ref mut child_i) = node_stack.last_mut().unwrap();
+                let (node, child_i) = node_stack.last_mut().unwrap();
                 *child_i -= 1;
 
                 // Get the text, sliced to the appropriate range.
@@ -1601,36 +1585,36 @@ impl<'a> Chunks<'a> {
                 };
 
                 // Return the text.
-                return Some(text_slice);
+                Some(text_slice)
             }
 
             Chunks {
                 iter:
-                    ChunksEnum::Light {
-                        text,
-                        ref mut is_end,
-                    },
+                ChunksEnum::Light {
+                    text,
+                    ref mut is_end,
+                },
                 ..
             } => {
                 if !*is_end || text.is_empty() {
-                    return None;
+                    None
                 } else {
                     *is_end = false;
-                    return Some(text);
+                    Some(text)
                 }
             }
         }
     }
 
     fn next_impl(&mut self) -> Option<&'a str> {
-        match *self {
+        return match *self {
             Chunks {
                 iter:
-                    ChunksEnum::Full {
-                        ref mut node_stack,
-                        total_bytes,
-                        ref mut byte_idx,
-                    },
+                ChunksEnum::Full {
+                    ref mut node_stack,
+                    total_bytes,
+                    ref mut byte_idx,
+                },
                 ..
             } => {
                 if *byte_idx >= total_bytes as isize {
@@ -1657,7 +1641,7 @@ impl<'a> Chunks<'a> {
                 }
 
                 // Fetch the node and child index.
-                let (node, ref mut child_i) = node_stack.last_mut().unwrap();
+                let (node, child_i) = node_stack.last_mut().unwrap();
 
                 // Get the text, sliced to the appropriate range.
                 let text = node.children().nodes()[*child_i].leaf_text();
@@ -1676,22 +1660,22 @@ impl<'a> Chunks<'a> {
                 *child_i += 1;
 
                 // Return the text.
-                return Some(text_slice);
+                Some(text_slice)
             }
 
             Chunks {
                 iter:
-                    ChunksEnum::Light {
-                        text,
-                        ref mut is_end,
-                    },
+                ChunksEnum::Light {
+                    text,
+                    ref mut is_end,
+                },
                 ..
             } => {
                 if *is_end || text.is_empty() {
-                    return None;
+                    None
                 } else {
                     *is_end = true;
-                    return Some(text);
+                    Some(text)
                 }
             }
         }

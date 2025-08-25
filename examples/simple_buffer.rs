@@ -19,29 +19,29 @@ impl TextBuffer {
     fn from_path(path: &str) -> io::Result<TextBuffer> {
         let text = Rope::from_reader(&mut io::BufReader::new(File::open(&path)?))?;
         Ok(TextBuffer {
-            text: text,
+            text,
             path: path.to_string(),
             dirty: false,
         })
     }
 
-    fn get_line(&self, idx: usize) -> RopeSlice {
+    fn get_line(&'_ self, idx: usize) -> RopeSlice<'_> {
         self.text.line(idx)
     }
 
-    fn bytes(&self) -> Bytes {
+    fn bytes(&'_ self) -> Bytes<'_> {
         self.text.bytes()
     }
 
-    fn chars(&self) -> Chars {
+    fn chars(&'_ self) -> Chars<'_> {
         self.text.chars()
     }
 
-    fn lines(&self) -> Lines {
+    fn lines(&'_ self) -> Lines<'_> {
         self.text.lines()
     }
 
-    fn chunks(&self) -> Chunks {
+    fn chunks(&'_ self) -> Chunks<'_> {
         self.text.chunks()
     }
 

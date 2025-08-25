@@ -53,14 +53,7 @@ mod constants {
     pub const MAX_CHILDREN: usize = {
         let node_list_align = align_of::<Arc<u8>>();
         let info_list_align = align_of::<TextInfo>();
-        let field_gap = if node_list_align >= info_list_align {
-            0
-        } else {
-            // This is over-conservative, because in reality it depends
-            // on the number of elements.  But handling that is probably
-            // more complexity than it's worth.
-            info_list_align - node_list_align
-        };
+        let field_gap = info_list_align.saturating_sub(node_list_align);
 
         // The -NODE_CHILDREN_ALIGN is for the `len` field in `NodeChildrenInternal`.
         let target_size = TARGET_TOTAL_SIZE - START_OFFSET - NODE_CHILDREN_ALIGN - field_gap;

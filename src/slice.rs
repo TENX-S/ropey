@@ -52,17 +52,17 @@ impl<'a> RopeSlice<'a> {
 
         // Early-out shortcut for taking a slice of the full thing.
         if start == 0 && end == node.char_count() {
-            if node.is_leaf() {
+            return if node.is_leaf() {
                 let text = node.leaf_text();
-                return RopeSlice(RSEnum::Light {
-                    text: text,
+                RopeSlice(RSEnum::Light {
+                    text,
                     char_count: (end - start) as Count,
                     utf16_surrogate_count: count_utf16_surrogates(text) as Count,
                     line_break_count: count_line_breaks(text) as Count,
-                });
+                })
             } else {
-                return RopeSlice(RSEnum::Full {
-                    node: node,
+                RopeSlice(RSEnum::Full {
+                    node,
                     start_info: TextInfo {
                         bytes: 0,
                         chars: 0,
@@ -75,8 +75,8 @@ impl<'a> RopeSlice<'a> {
                         utf16_surrogates: node.utf16_surrogate_count() as Count,
                         line_breaks: node.line_break_count() as Count,
                     },
-                });
-            }
+                })
+            };
         }
 
         // Find the deepest node that still contains the full range given.
@@ -118,7 +118,7 @@ impl<'a> RopeSlice<'a> {
 
         // Create the slice
         RopeSlice(RSEnum::Full {
-            node: node,
+            node,
             start_info: node.char_to_text_info(n_start),
             end_info: {
                 #[cfg(any(feature = "cr_lines", feature = "unicode_lines"))]
@@ -145,16 +145,16 @@ impl<'a> RopeSlice<'a> {
 
         // Early-out shortcut for taking a slice of the full thing.
         if start == 0 && end == node.byte_count() {
-            if node.is_leaf() {
+            return if node.is_leaf() {
                 let text = node.leaf_text();
-                return Ok(RopeSlice(RSEnum::Light {
+                Ok(RopeSlice(RSEnum::Light {
                     text,
                     char_count: count_chars(text) as Count,
                     utf16_surrogate_count: count_utf16_surrogates(text) as Count,
                     line_break_count: count_line_breaks(text) as Count,
-                }));
+                }))
             } else {
-                return Ok(RopeSlice(RSEnum::Full {
+                Ok(RopeSlice(RSEnum::Full {
                     node,
                     start_info: TextInfo {
                         bytes: 0,
@@ -168,8 +168,8 @@ impl<'a> RopeSlice<'a> {
                         utf16_surrogates: node.utf16_surrogate_count() as Count,
                         line_breaks: node.line_break_count() as Count,
                     },
-                }));
-            }
+                }))
+            };
         }
 
         // Find the deepest node that still contains the full range given.
@@ -234,10 +234,10 @@ impl<'a> RopeSlice<'a> {
     pub fn len_bytes(&self) -> usize {
         match *self {
             RopeSlice(RSEnum::Full {
-                end_info,
-                start_info,
-                ..
-            }) => (end_info.bytes - start_info.bytes) as usize,
+                          end_info,
+                          start_info,
+                          ..
+                      }) => (end_info.bytes - start_info.bytes) as usize,
             RopeSlice(RSEnum::Light { text, .. }) => text.len(),
         }
     }
@@ -249,10 +249,10 @@ impl<'a> RopeSlice<'a> {
     pub fn len_chars(&self) -> usize {
         match *self {
             RopeSlice(RSEnum::Full {
-                end_info,
-                start_info,
-                ..
-            }) => (end_info.chars - start_info.chars) as usize,
+                          end_info,
+                          start_info,
+                          ..
+                      }) => (end_info.chars - start_info.chars) as usize,
             RopeSlice(RSEnum::Light { char_count, .. }) => char_count as usize,
         }
     }
@@ -264,13 +264,13 @@ impl<'a> RopeSlice<'a> {
     pub fn len_lines(&self) -> usize {
         match *self {
             RopeSlice(RSEnum::Full {
-                end_info,
-                start_info,
-                ..
-            }) => (end_info.line_breaks - start_info.line_breaks) as usize + 1,
+                          end_info,
+                          start_info,
+                          ..
+                      }) => (end_info.line_breaks - start_info.line_breaks) as usize + 1,
             RopeSlice(RSEnum::Light {
-                line_break_count, ..
-            }) => line_break_count as usize + 1,
+                          line_break_count, ..
+                      }) => line_break_count as usize + 1,
         }
     }
 
@@ -287,18 +287,18 @@ impl<'a> RopeSlice<'a> {
     pub fn len_utf16_cu(&self) -> usize {
         match *self {
             RopeSlice(RSEnum::Full {
-                end_info,
-                start_info,
-                ..
-            }) => {
+                          end_info,
+                          start_info,
+                          ..
+                      }) => {
                 ((end_info.chars + end_info.utf16_surrogates)
                     - (start_info.chars + start_info.utf16_surrogates)) as usize
             }
             RopeSlice(RSEnum::Light {
-                char_count,
-                utf16_surrogate_count,
-                ..
-            }) => (char_count + utf16_surrogate_count) as usize,
+                          char_count,
+                          utf16_surrogate_count,
+                          ..
+                      }) => (char_count + utf16_surrogate_count) as usize,
         }
     }
 
@@ -641,7 +641,7 @@ impl<'a> RopeSlice<'a> {
             let end_range = end_bound_to_num(char_range.end_bound());
 
             // Early-out shortcut for taking a slice of the full thing.
-            if start_range == None && end_range == None {
+            if start_range.is_none() && end_range.is_none() {
                 return *self;
             }
 
@@ -662,8 +662,8 @@ impl<'a> RopeSlice<'a> {
 
         match *self {
             RopeSlice(RSEnum::Full {
-                node, start_info, ..
-            }) => RopeSlice::new_with_range(
+                          node, start_info, ..
+                      }) => RopeSlice::new_with_range(
                 node,
                 start_info.chars as usize + start,
                 start_info.chars as usize + end,
@@ -714,10 +714,10 @@ impl<'a> RopeSlice<'a> {
     pub fn bytes(&self) -> Bytes<'a> {
         match *self {
             RopeSlice(RSEnum::Full {
-                node,
-                start_info,
-                end_info,
-            }) => Bytes::new_with_range(
+                          node,
+                          start_info,
+                          end_info,
+                      }) => Bytes::new_with_range(
                 node,
                 (start_info.bytes as usize, end_info.bytes as usize),
                 (start_info.chars as usize, end_info.chars as usize),
@@ -761,10 +761,10 @@ impl<'a> RopeSlice<'a> {
     pub fn chars(&self) -> Chars<'a> {
         match *self {
             RopeSlice(RSEnum::Full {
-                node,
-                start_info,
-                end_info,
-            }) => Chars::new_with_range(
+                          node,
+                          start_info,
+                          end_info,
+                      }) => Chars::new_with_range(
                 node,
                 (start_info.bytes as usize, end_info.bytes as usize),
                 (start_info.chars as usize, end_info.chars as usize),
@@ -808,10 +808,10 @@ impl<'a> RopeSlice<'a> {
     pub fn lines(&self) -> Lines<'a> {
         match *self {
             RopeSlice(RSEnum::Full {
-                node,
-                start_info,
-                end_info,
-            }) => Lines::new_with_range(
+                          node,
+                          start_info,
+                          end_info,
+                      }) => Lines::new_with_range(
                 node,
                 (start_info.bytes as usize, end_info.bytes as usize),
                 (
@@ -820,10 +820,10 @@ impl<'a> RopeSlice<'a> {
                 ),
             ),
             RopeSlice(RSEnum::Light {
-                text,
-                line_break_count,
-                ..
-            }) => Lines::from_str(text, line_break_count as usize + 1),
+                          text,
+                          line_break_count,
+                          ..
+                      }) => Lines::from_str(text, line_break_count as usize + 1),
         }
     }
 
@@ -858,10 +858,10 @@ impl<'a> RopeSlice<'a> {
     pub fn chunks(&self) -> Chunks<'a> {
         match *self {
             RopeSlice(RSEnum::Full {
-                node,
-                start_info,
-                end_info,
-            }) => Chunks::new_with_range(
+                          node,
+                          start_info,
+                          end_info,
+                      }) => Chunks::new_with_range(
                 node,
                 (start_info.bytes as usize, end_info.bytes as usize),
                 (start_info.chars as usize, end_info.chars as usize),
@@ -1030,8 +1030,8 @@ impl<'a> RopeSlice<'a> {
         if char_idx <= self.len_chars() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node, start_info, ..
-                }) => {
+                              node, start_info, ..
+                          }) => {
                     let char_idx = char_idx + start_info.chars as usize;
 
                     let (chunk, chunk_start_info) = node.get_chunk_at_char(char_idx);
@@ -1064,8 +1064,8 @@ impl<'a> RopeSlice<'a> {
         if utf16_cu_idx <= self.len_utf16_cu() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node, start_info, ..
-                }) => {
+                              node, start_info, ..
+                          }) => {
                     let utf16_cu_idx =
                         utf16_cu_idx + (start_info.chars + start_info.utf16_surrogates) as usize;
 
@@ -1183,10 +1183,10 @@ impl<'a> RopeSlice<'a> {
         if byte_idx <= self.len_bytes() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node,
-                    start_info,
-                    end_info,
-                }) => {
+                              node,
+                              start_info,
+                              end_info,
+                          }) => {
                     // Get the chunk.
                     let (chunk, chunk_start_info) =
                         node.get_chunk_at_byte(byte_idx + start_info.bytes as usize);
@@ -1221,10 +1221,10 @@ impl<'a> RopeSlice<'a> {
         if char_idx <= self.len_chars() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node,
-                    start_info,
-                    end_info,
-                }) => {
+                              node,
+                              start_info,
+                              end_info,
+                          }) => {
                     // Get the chunk.
                     let (chunk, chunk_start_info) =
                         node.get_chunk_at_char(char_idx + start_info.chars as usize);
@@ -1262,10 +1262,10 @@ impl<'a> RopeSlice<'a> {
         if line_break_idx <= self.len_lines() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node,
-                    start_info,
-                    end_info,
-                }) => {
+                              node,
+                              start_info,
+                              end_info,
+                          }) => {
                     // Get the chunk.
                     let (chunk, chunk_start_info) = if line_break_idx == 0 {
                         node.get_chunk_at_byte(start_info.bytes as usize)
@@ -1311,7 +1311,7 @@ impl<'a> RopeSlice<'a> {
             let end_range = end_bound_to_num(char_range.end_bound());
 
             // Early-out shortcut for taking a slice of the full thing.
-            if start_range == None && end_range == None {
+            if start_range.is_none() && end_range.is_none() {
                 return Some(*self);
             }
 
@@ -1325,8 +1325,8 @@ impl<'a> RopeSlice<'a> {
         if start <= end && end <= self.len_chars() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node, start_info, ..
-                }) => Some(RopeSlice::new_with_range(
+                              node, start_info, ..
+                          }) => Some(RopeSlice::new_with_range(
                     node,
                     start_info.chars as usize + start,
                     start_info.chars as usize + end,
@@ -1407,19 +1407,19 @@ impl<'a> RopeSlice<'a> {
 
         match *self {
             RopeSlice(RSEnum::Full {
-                node, start_info, ..
-            }) => RopeSlice::new_with_byte_range(
+                          node, start_info, ..
+                      }) => RopeSlice::new_with_byte_range(
                 node,
                 start_info.bytes as usize + start,
                 start_info.bytes as usize + end,
             )
-            .map_err(|e| {
-                if let Error::ByteRangeNotCharBoundary(_, _) = e {
-                    Error::ByteRangeNotCharBoundary(start_range, end_range)
-                } else {
-                    e
-                }
-            }),
+                .map_err(|e| {
+                    if let Error::ByteRangeNotCharBoundary(_, _) = e {
+                        Error::ByteRangeNotCharBoundary(start_range, end_range)
+                    } else {
+                        e
+                    }
+                }),
             RopeSlice(RSEnum::Light { text, .. }) => {
                 if !text.is_char_boundary(start) || !text.is_char_boundary(end) {
                     return Err(Error::ByteRangeNotCharBoundary(start_range, end_range));
@@ -1442,10 +1442,10 @@ impl<'a> RopeSlice<'a> {
         if byte_idx <= self.len_bytes() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node,
-                    start_info,
-                    end_info,
-                }) => Some(Bytes::new_with_range_at(
+                              node,
+                              start_info,
+                              end_info,
+                          }) => Some(Bytes::new_with_range_at(
                     node,
                     start_info.bytes as usize + byte_idx,
                     (start_info.bytes as usize, end_info.bytes as usize),
@@ -1469,10 +1469,10 @@ impl<'a> RopeSlice<'a> {
         if char_idx <= self.len_chars() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node,
-                    start_info,
-                    end_info,
-                }) => Some(Chars::new_with_range_at(
+                              node,
+                              start_info,
+                              end_info,
+                          }) => Some(Chars::new_with_range_at(
                     node,
                     start_info.chars as usize + char_idx,
                     (start_info.bytes as usize, end_info.bytes as usize),
@@ -1496,10 +1496,10 @@ impl<'a> RopeSlice<'a> {
         if line_idx <= self.len_lines() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node,
-                    start_info,
-                    end_info,
-                }) => Some(Lines::new_with_range_at(
+                              node,
+                              start_info,
+                              end_info,
+                          }) => Some(Lines::new_with_range_at(
                     node,
                     start_info.line_breaks as usize + line_idx,
                     (start_info.bytes as usize, end_info.bytes as usize),
@@ -1509,10 +1509,10 @@ impl<'a> RopeSlice<'a> {
                     ),
                 )),
                 RopeSlice(RSEnum::Light {
-                    text,
-                    line_break_count,
-                    ..
-                }) => Some(Lines::from_str_at(
+                              text,
+                              line_break_count,
+                              ..
+                          }) => Some(Lines::from_str_at(
                     text,
                     line_idx,
                     line_break_count as usize + 1,
@@ -1530,10 +1530,10 @@ impl<'a> RopeSlice<'a> {
         if byte_idx <= self.len_bytes() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node,
-                    start_info,
-                    end_info,
-                }) => {
+                              node,
+                              start_info,
+                              end_info,
+                          }) => {
                     let (chunks, chunk_byte_idx, chunk_char_idx, chunk_line_idx) =
                         Chunks::new_with_range_at_byte(
                             node,
@@ -1554,11 +1554,11 @@ impl<'a> RopeSlice<'a> {
                     ))
                 }
                 RopeSlice(RSEnum::Light {
-                    text,
-                    char_count,
-                    line_break_count,
-                    ..
-                }) => {
+                              text,
+                              char_count,
+                              line_break_count,
+                              ..
+                          }) => {
                     let chunks = Chunks::from_str(text, byte_idx == text.len());
 
                     if byte_idx == text.len() {
@@ -1585,10 +1585,10 @@ impl<'a> RopeSlice<'a> {
         if char_idx <= self.len_chars() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node,
-                    start_info,
-                    end_info,
-                }) => {
+                              node,
+                              start_info,
+                              end_info,
+                          }) => {
                     let (chunks, chunk_byte_idx, chunk_char_idx, chunk_line_idx) =
                         Chunks::new_with_range_at_char(
                             node,
@@ -1609,11 +1609,11 @@ impl<'a> RopeSlice<'a> {
                     ))
                 }
                 RopeSlice(RSEnum::Light {
-                    text,
-                    char_count,
-                    line_break_count,
-                    ..
-                }) => {
+                              text,
+                              char_count,
+                              line_break_count,
+                              ..
+                          }) => {
                     let chunks = Chunks::from_str(text, char_idx == char_count as usize);
 
                     if char_idx == char_count as usize {
@@ -1643,10 +1643,10 @@ impl<'a> RopeSlice<'a> {
         if line_break_idx <= self.len_lines() {
             match *self {
                 RopeSlice(RSEnum::Full {
-                    node,
-                    start_info,
-                    end_info,
-                }) => {
+                              node,
+                              start_info,
+                              end_info,
+                          }) => {
                     // Get the chunk.
                     let (chunks, chunk_byte_idx, chunk_char_idx, chunk_line_idx) =
                         if line_break_idx == 0 {
@@ -1691,11 +1691,11 @@ impl<'a> RopeSlice<'a> {
                     ))
                 }
                 RopeSlice(RSEnum::Light {
-                    text,
-                    char_count,
-                    line_break_count,
-                    ..
-                }) => {
+                              text,
+                              char_count,
+                              line_break_count,
+                              ..
+                          }) => {
                     let chunks =
                         Chunks::from_str(text, line_break_idx == line_break_count as usize);
 
@@ -1738,7 +1738,7 @@ impl<'a> From<&'a str> for RopeSlice<'a> {
     #[inline]
     fn from(text: &'a str) -> Self {
         RopeSlice(RSEnum::Light {
-            text: text,
+            text,
             char_count: count_chars(text) as Count,
             utf16_surrogate_count: count_utf16_surrogates(text) as Count,
             line_break_count: count_line_breaks(text) as Count,
@@ -1789,9 +1789,9 @@ impl<'a> std::fmt::Display for RopeSlice<'a> {
     }
 }
 
-impl<'a> std::cmp::Eq for RopeSlice<'a> {}
+impl<'a> Eq for RopeSlice<'a> {}
 
-impl<'a, 'b> std::cmp::PartialEq<RopeSlice<'b>> for RopeSlice<'a> {
+impl<'a, 'b> PartialEq<RopeSlice<'b>> for RopeSlice<'a> {
     fn eq(&self, other: &RopeSlice<'b>) -> bool {
         if self.len_bytes() != other.len_bytes() {
             return false;
@@ -1838,10 +1838,10 @@ impl<'a, 'b> std::cmp::PartialEq<RopeSlice<'b>> for RopeSlice<'a> {
     }
 }
 
-impl<'a, 'b> std::cmp::PartialEq<&'b str> for RopeSlice<'a> {
+impl<'a, 'b> PartialEq<&'b str> for RopeSlice<'a> {
     #[inline]
     fn eq(&self, other: &&'b str) -> bool {
-        match *self {
+        return match *self {
             RopeSlice(RSEnum::Full { .. }) => {
                 if self.len_bytes() != other.len() {
                     return false;
@@ -1857,79 +1857,79 @@ impl<'a, 'b> std::cmp::PartialEq<&'b str> for RopeSlice<'a> {
                     idx += chunk.len();
                 }
 
-                return true;
+                true
             }
             RopeSlice(RSEnum::Light { text, .. }) => {
-                return text == *other;
+                text == *other
             }
-        }
+        };
     }
 }
 
-impl<'a, 'b> std::cmp::PartialEq<RopeSlice<'a>> for &'b str {
+impl<'a> PartialEq<RopeSlice<'a>> for &str {
     #[inline]
     fn eq(&self, other: &RopeSlice<'a>) -> bool {
         other == self
     }
 }
 
-impl<'a> std::cmp::PartialEq<str> for RopeSlice<'a> {
+impl<'a> PartialEq<str> for RopeSlice<'a> {
     #[inline]
     fn eq(&self, other: &str) -> bool {
         std::cmp::PartialEq::<&str>::eq(self, &other)
     }
 }
 
-impl<'a> std::cmp::PartialEq<RopeSlice<'a>> for str {
+impl<'a> PartialEq<RopeSlice<'a>> for str {
     #[inline]
     fn eq(&self, other: &RopeSlice<'a>) -> bool {
         std::cmp::PartialEq::<&str>::eq(other, &self)
     }
 }
 
-impl<'a> std::cmp::PartialEq<String> for RopeSlice<'a> {
+impl<'a> PartialEq<String> for RopeSlice<'a> {
     #[inline]
     fn eq(&self, other: &String) -> bool {
         self == other.as_str()
     }
 }
 
-impl<'a> std::cmp::PartialEq<RopeSlice<'a>> for String {
+impl<'a> PartialEq<RopeSlice<'a>> for String {
     #[inline]
     fn eq(&self, other: &RopeSlice<'a>) -> bool {
         self.as_str() == other
     }
 }
 
-impl<'a, 'b> std::cmp::PartialEq<std::borrow::Cow<'b, str>> for RopeSlice<'a> {
+impl<'a, 'b> PartialEq<std::borrow::Cow<'b, str>> for RopeSlice<'a> {
     #[inline]
     fn eq(&self, other: &std::borrow::Cow<'b, str>) -> bool {
         *self == **other
     }
 }
 
-impl<'a, 'b> std::cmp::PartialEq<RopeSlice<'a>> for std::borrow::Cow<'b, str> {
+impl<'a, 'b> PartialEq<RopeSlice<'a>> for std::borrow::Cow<'b, str> {
     #[inline]
     fn eq(&self, other: &RopeSlice<'a>) -> bool {
         **self == *other
     }
 }
 
-impl<'a> std::cmp::PartialEq<Rope> for RopeSlice<'a> {
+impl<'a> PartialEq<Rope> for RopeSlice<'a> {
     #[inline]
     fn eq(&self, other: &Rope) -> bool {
         *self == other.slice(..)
     }
 }
 
-impl<'a> std::cmp::PartialEq<RopeSlice<'a>> for Rope {
+impl<'a> PartialEq<RopeSlice<'a>> for Rope {
     #[inline]
     fn eq(&self, other: &RopeSlice<'a>) -> bool {
         self.slice(..) == *other
     }
 }
 
-impl<'a> std::cmp::Ord for RopeSlice<'a> {
+impl<'a> Ord for RopeSlice<'a> {
     #[allow(clippy::op_ref)] // Erroneously thinks with can directly use a slice.
     fn cmp(&self, other: &RopeSlice<'a>) -> std::cmp::Ordering {
         let mut chunk_itr_1 = self.chunks();
@@ -1977,7 +1977,7 @@ impl<'a> std::cmp::Ord for RopeSlice<'a> {
     }
 }
 
-impl<'a, 'b> std::cmp::PartialOrd<RopeSlice<'b>> for RopeSlice<'a> {
+impl<'a, 'b> PartialOrd<RopeSlice<'b>> for RopeSlice<'a> {
     #[inline]
     fn partial_cmp(&self, other: &RopeSlice<'b>) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
@@ -2021,7 +2021,7 @@ impl<'a> std::hash::Hash for RopeSlice<'a> {
                     // Append to the buffer.
                     let n = (BLOCK_SIZE - buffer_len).min(data.len());
                     let (head, tail) = data.split_at(n);
-                    (&mut buffer[buffer_len..(buffer_len + n)]).copy_from_slice(head);
+                    buffer[buffer_len..(buffer_len + n)].copy_from_slice(head);
                     buffer_len += n;
                     data = tail;
                 }

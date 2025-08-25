@@ -79,7 +79,7 @@ fn remove_small(c: &mut Criterion) {
         bench.iter(|| {
             let len = rope.len_chars();
             let end = len;
-            let start = end - (1).min(len);
+            let start = end - 1.min(len);
             rope.remove(start..end);
 
             if rope.len_bytes() == TEXT.len() / 2 {
@@ -149,7 +149,7 @@ fn remove_medium(c: &mut Criterion) {
         bench.iter(|| {
             let len = rope.len_chars();
             let end = len;
-            let start = end - (15).min(len);
+            let start = end - 15.min(len);
             rope.remove(start..end);
 
             if rope.len_bytes() == TEXT.len() / 2 {
