@@ -14,7 +14,7 @@ use crate::str_utils::{
 use crate::tree::{Count, Node, NodeChildren, TextInfo, MAX_BYTES, MIN_BYTES};
 use crate::{end_bound_to_num, start_bound_to_num, Error, Result};
 
-/// A utf8 text rope.
+/// An utf8 text rope.
 ///
 /// The time complexity of nearly all edit and query operations on `Rope` are
 /// worst-case `O(log N)` in the length of the rope.  `Rope` is designed to
@@ -71,7 +71,7 @@ use crate::{end_bound_to_num, start_bound_to_num, Error, Result};
 /// Cloning `Rope`s is extremely cheap, running in `O(1)` time and taking a
 /// small constant amount of memory for the new clone, regardless of text size.
 /// This is accomplished by data sharing between `Rope` clones.  The memory
-/// used by clones only grows incrementally as the their contents diverge due
+/// used by clones only grows incrementally as the contents diverge due
 /// to edits.  All of this is thread safe, so clones can be sent freely
 /// between threads.
 ///
@@ -179,7 +179,7 @@ impl Rope {
                             ))
                         } else {
                             Ok(builder.finish())
-                        }
+                        };
                     }
                 }
 
@@ -620,7 +620,7 @@ impl Rope {
     ///
     /// Notes:
     ///
-    /// - If the byte is in the middle of a multi-byte char, returns the
+    /// - If the byte is in the middle of a multibyte char, returns the
     ///   index of the char that the byte belongs to.
     /// - `byte_idx` can be one-past-the-end, which will return
     ///   one-past-the-end char index.
@@ -1201,7 +1201,7 @@ impl Rope {
 
     /// NOT PART OF THE PUBLIC API (hidden from docs for a reason!)
     ///
-    /// Debugging tool to make sure that all of the meta-data of the
+    /// Debugging tool to make sure that all the meta-data of the
     /// tree is consistent with the actual data.
     #[doc(hidden)]
     pub fn assert_integrity(&self) {
@@ -1210,7 +1210,7 @@ impl Rope {
 
     /// NOT PART OF THE PUBLIC API (hidden from docs for a reason!)
     ///
-    /// Debugging tool to make sure that all of the following invariants
+    /// Debugging tool to make sure that all the following invariants
     /// hold true throughout the tree:
     ///
     /// - The tree is the same height everywhere.
@@ -1853,10 +1853,10 @@ impl<'a> From<RopeSlice<'a>> for Rope {
         use crate::slice::RSEnum;
         match s {
             RopeSlice(RSEnum::Full {
-                node,
-                start_info,
-                end_info,
-            }) => {
+                          node,
+                          start_info,
+                          end_info,
+                      }) => {
                 let mut rope = Rope {
                     root: Arc::clone(node),
                 };
@@ -1930,7 +1930,7 @@ impl<'a> From<&'a Rope> for std::borrow::Cow<'a, str> {
 impl<'a> FromIterator<&'a str> for Rope {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = &'a str>,
+        T: IntoIterator<Item=&'a str>,
     {
         let mut builder = RopeBuilder::new();
         for chunk in iter {
@@ -1943,7 +1943,7 @@ impl<'a> FromIterator<&'a str> for Rope {
 impl<'a> FromIterator<std::borrow::Cow<'a, str>> for Rope {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = std::borrow::Cow<'a, str>>,
+        T: IntoIterator<Item=std::borrow::Cow<'a, str>>,
     {
         let mut builder = RopeBuilder::new();
         for chunk in iter {
@@ -1956,7 +1956,7 @@ impl<'a> FromIterator<std::borrow::Cow<'a, str>> for Rope {
 impl FromIterator<String> for Rope {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = String>,
+        T: IntoIterator<Item=String>,
     {
         let mut builder = RopeBuilder::new();
         for chunk in iter {

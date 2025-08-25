@@ -753,11 +753,11 @@ impl<'a> Lines<'a> {
         match *self {
             Lines {
                 iter:
-                    LinesEnum::Full {
-                        ref mut node_stack,
-                        ref mut leaf_byte_idx,
-                        ..
-                    },
+                LinesEnum::Full {
+                    ref mut node_stack,
+                    ref mut leaf_byte_idx,
+                    ..
+                },
                 ref mut byte_idx,
                 ref mut text,
                 ref mut at_end,
@@ -768,7 +768,7 @@ impl<'a> Lines<'a> {
 
                 // The only line yielded by this iterator that doesn't
                 // end with a line break is the very last line. As the
-                // very last line requires a special conditon here
+                // very last line requires a special condition here
                 // anyway we can save the result so we don't have to
                 // count newlines later.
                 let ends_with_line_break = if std::mem::take(at_end) {
@@ -897,7 +897,7 @@ impl<'a> Lines<'a> {
 
                     if info.bytes as usize >= available_bytes {
                         // This chunk does not contain a line break but the current
-                        // line still ends here because the iterator is exhaused.
+                        // line still ends here because the iterator is exhausted.
                         *text = node.children().nodes()[child_i].leaf_text();
                         break text.len() - *byte_idx;
                     }
@@ -908,7 +908,7 @@ impl<'a> Lines<'a> {
                 };
                 let head = &text[head_start..];
 
-                // Book keeping.
+                // Bookkeeping.
                 *byte_idx -= head.len();
                 *leaf_byte_idx = head_start as u32;
 
@@ -922,11 +922,11 @@ impl<'a> Lines<'a> {
                         node: node_stack[shared_parent].0,
                         start_info: pos_in_shared_parent
                             - TextInfo {
-                                bytes: head.len() as Count,
-                                chars: head_chars,
-                                utf16_surrogates: head_surrogates,
-                                line_breaks: 0,
-                            }
+                            bytes: head.len() as Count,
+                            chars: head_chars,
+                            utf16_surrogates: head_surrogates,
+                            line_breaks: 0,
+                        }
                             - len,
                         end_info: pos_in_shared_parent,
                     }
@@ -980,11 +980,11 @@ impl<'a> Lines<'a> {
         match *self {
             Lines {
                 iter:
-                    LinesEnum::Full {
-                        ref mut node_stack,
-                        ref mut leaf_byte_idx,
-                        total_bytes,
-                    },
+                LinesEnum::Full {
+                    ref mut node_stack,
+                    ref mut leaf_byte_idx,
+                    total_bytes,
+                },
                 ref mut byte_idx,
                 ref mut text,
                 ref mut at_end,
@@ -1010,7 +1010,7 @@ impl<'a> Lines<'a> {
 
                 // Check if the iterators needs to advance to the next chunk.
                 // During this check the number of newline (0 or 1) is yielded
-                // for free so save that aswell.
+                // for free so save that as well.
                 let available_bytes = total_bytes - *byte_idx;
                 let (line_inside_chunk, line_break_count) = if line_len >= available_bytes {
                     // If the iterator is exhausted we don't need to switch chunks.
@@ -1137,7 +1137,7 @@ impl<'a> Lines<'a> {
                     multi_chunk_slice = true;
                 };
 
-                // Book keeping.
+                // Bookkeeping.
                 *byte_idx += tail_len;
                 *leaf_byte_idx = tail_len as u32;
 
@@ -1152,11 +1152,11 @@ impl<'a> Lines<'a> {
                         end_info: pos_in_shared_parent
                             + len
                             + TextInfo {
-                                bytes: tail_len as Count,
-                                chars: line_tail_chars,
-                                utf16_surrogates: line_tail_surrogates,
-                                line_breaks: tail_ends_with_newline as Count,
-                            },
+                            bytes: tail_len as Count,
+                            chars: line_tail_chars,
+                            utf16_surrogates: line_tail_surrogates,
+                            line_breaks: tail_ends_with_newline as Count,
+                        },
                     }
                 } else {
                     RSEnum::Light {
@@ -1235,7 +1235,7 @@ impl ExactSizeIterator for Lines<'_> {}
 
 /// An iterator over a `Rope`'s contiguous `str` chunks.
 ///
-/// Internally, each `Rope` stores text as a segemented collection of utf8
+/// Internally, each `Rope` stores text as a segmented collection of utf8
 /// strings. This iterator iterates over those segments, returning a
 /// `&str` slice for each one.  It is useful for situations such as:
 ///
@@ -1286,7 +1286,7 @@ impl<'a> Chunks<'a> {
             (0, info.chars as usize),
             (0, info.line_breaks as usize + 1),
         )
-        .0
+            .0
     }
 
     #[inline(always)]
@@ -1303,7 +1303,7 @@ impl<'a> Chunks<'a> {
             char_idx_range,
             line_break_idx_range,
         )
-        .0
+            .0
     }
 
     /// The main workhorse function for creating new `Chunks` iterators.
@@ -1314,7 +1314,7 @@ impl<'a> Chunks<'a> {
     /// of the iterator is bounded by `byte_idx_range`.
     ///
     /// Both `at_byte` and `byte_idx_range` are relative to the beginning of
-    /// of the passed node.
+    /// the passed node.
     ///
     /// Passing an `at_byte` equal to the max of `byte_idx_range` creates an
     /// iterator at the end of forward iteration.
@@ -1380,7 +1380,7 @@ impl<'a> Chunks<'a> {
                     0,
                     0,
                 )
-            }
+            };
         }
 
         // Create and populate the node stack, and determine the char index
@@ -1603,7 +1603,7 @@ impl<'a> Chunks<'a> {
                     Some(text)
                 }
             }
-        }
+        };
     }
 
     fn next_impl(&mut self) -> Option<&'a str> {
@@ -1655,7 +1655,7 @@ impl<'a> Chunks<'a> {
                     &text[start_byte..end_byte]
                 };
 
-                // Book keeping.
+                // Bookkeeping.
                 *byte_idx += text.len() as isize;
                 *child_i += 1;
 
@@ -1678,7 +1678,7 @@ impl<'a> Chunks<'a> {
                     Some(text)
                 }
             }
-        }
+        };
     }
 }
 

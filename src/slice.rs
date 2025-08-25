@@ -309,7 +309,7 @@ impl<'a> RopeSlice<'a> {
     ///
     /// Notes:
     ///
-    /// - If the byte is in the middle of a multi-byte char, returns the
+    /// - If the byte is in the middle of a multibyte char, returns the
     ///   index of the char that the byte belongs to.
     /// - `byte_idx` can be one-past-the-end, which will return one-past-the-end
     ///   char index.

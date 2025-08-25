@@ -1,4 +1,4 @@
-//! Ropey is a utf8 text rope for Rust.  It is fast, robust, and can handle
+//! Ropey is an utf8 text rope for Rust.  It is fast, robust, and can handle
 //! huge texts and memory-incoherent edits with ease.
 //!
 //! Ropey's atomic unit of text is Unicode scalar values (or `char`s in Rust)
@@ -80,7 +80,7 @@
 //! - The functions in [`str_utils`] for operating on
 //!   `&str` slices.
 //!
-//! Internally, each `Rope` stores text as a segemented collection of utf8
+//! Internally, each `Rope` stores text as a segmented collection of utf8
 //! strings.  The chunk-fetching methods and `Chunks` iterator provide direct
 //! access to those strings (or "chunks") as `&str` slices, allowing client
 //! code to work directly with the underlying utf8 data.
@@ -189,6 +189,7 @@ pub use crate::slice::RopeSlice;
 /// These are only exposed for tests that live in the `tests` directory.
 #[doc(hidden)]
 pub use crate::tree::{MAX_BYTES, MAX_CHILDREN, MIN_BYTES, MIN_CHILDREN};
+
 
 //==============================================================
 // Error reporting types.

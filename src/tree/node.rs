@@ -155,7 +155,7 @@ impl Node {
                 if byte_start > 0 || byte_end < leaf_text.len() {
                     let seam = (byte_start == 0 && leaf_text.as_bytes()[byte_end] == 0x0A)
                         || (byte_end == leaf_text.len()
-                            && leaf_text.as_bytes()[byte_start - 1] == 0x0D);
+                        && leaf_text.as_bytes()[byte_start - 1] == 0x0D);
 
                     let seg_len = byte_end - byte_start; // Length of removal segement
                     if seg_len < (leaf_text.len() - seg_len) {
@@ -213,7 +213,7 @@ impl Node {
                 let handle_child = |children: &mut NodeChildren,
                                     child_i: usize,
                                     c_char_acc: usize|
-                 -> (bool, bool, TextInfo) {
+                                    -> (bool, bool, TextInfo) {
                     // Recurse into child
                     let tmp_info = children.info()[child_i];
                     let tmp_chars = children.info()[child_i].chars as usize;
@@ -317,7 +317,7 @@ impl Node {
 
                     // Return
                     (children.combined_info(), seam, needs_fix)
-                }
+                };
             }
         }
     }
@@ -365,7 +365,7 @@ impl Node {
                 }
             } else {
                 None
-            }
+            };
         } else {
             panic!("Reached leaf before getting to target depth.");
         }
@@ -415,7 +415,7 @@ impl Node {
                 }
             } else {
                 None
-            }
+            };
         } else {
             panic!("Reached leaf before getting to target depth.");
         }
@@ -674,7 +674,7 @@ impl Node {
         }
     }
 
-    /// Debugging tool to make sure that all of the meta-data of the
+    /// Debugging tool to make sure that all the meta-data of the
     /// tree is consistent with the actual data.
     pub fn assert_integrity(&self) {
         match *self {
@@ -880,9 +880,9 @@ impl Node {
             loop {
                 let do_merge = (children.len() > 1)
                     && match *children.nodes()[0] {
-                        Node::Leaf(ref text) => text.len() < MIN_BYTES,
-                        Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
-                    };
+                    Node::Leaf(ref text) => text.len() < MIN_BYTES,
+                    Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
+                };
 
                 if do_merge {
                     did_stuff |= children.merge_distribute(0, 1);
@@ -909,9 +909,9 @@ impl Node {
                 let last_i = children.len() - 1;
                 let do_merge = (children.len() > 1)
                     && match *children.nodes()[last_i] {
-                        Node::Leaf(ref text) => text.len() < MIN_BYTES,
-                        Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
-                    };
+                    Node::Leaf(ref text) => text.len() < MIN_BYTES,
+                    Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
+                };
 
                 if do_merge {
                     did_stuff |= children.merge_distribute(last_i - 1, last_i);
@@ -952,10 +952,10 @@ impl Node {
                     } else {
                         do_merge = do_merge
                             || (start_info.chars as usize == char_idx
-                                && match *children.nodes()[child_i - 1] {
-                                    Node::Leaf(ref text) => text.len() < MIN_BYTES,
-                                    Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
-                                });
+                            && match *children.nodes()[child_i - 1] {
+                            Node::Leaf(ref text) => text.len() < MIN_BYTES,
+                            Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
+                        });
                         if do_merge {
                             let res = children.merge_distribute(child_i - 1, child_i);
                             did_stuff |= res

@@ -80,21 +80,21 @@ pub(crate) fn last_line_start_byte_idx(text: &str) -> usize {
                 return idx + 1;
             }
             0x85 =>
-            {
-                #[cfg(feature = "unicode_lines")]
-                if let Some((_, 0xC2)) = itr.next() {
-                    return idx + 1;
-                }
-            }
-            0xA8 | 0xA9 =>
-            {
-                #[cfg(feature = "unicode_lines")]
-                if let Some((_, 0x80)) = itr.next() {
-                    if let Some((_, 0xE2)) = itr.next() {
+                {
+                    #[cfg(feature = "unicode_lines")]
+                    if let Some((_, 0xC2)) = itr.next() {
                         return idx + 1;
                     }
                 }
-            }
+            0xA8 | 0xA9 =>
+                {
+                    #[cfg(feature = "unicode_lines")]
+                    if let Some((_, 0x80)) = itr.next() {
+                        if let Some((_, 0xE2)) = itr.next() {
+                            return idx + 1;
+                        }
+                    }
+                }
             _ => {}
         }
     }
@@ -119,7 +119,7 @@ pub(crate) fn trim_line_break(text: &str) -> &str {
 
     let tail = &text[i..];
 
-    // Check if it's one of the fancy unicode line breaks.
+    // Check if it's one of the fancy Unicode line breaks.
     #[cfg(feature = "unicode_lines")]
     if matches!(
         tail,

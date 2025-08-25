@@ -84,7 +84,7 @@ impl NodeChildren {
     }
 
     /// Attempts to merge two nodes, and if it's too much data to merge
-    /// equi-distributes it between the two.
+    /// equip-distributes it between the two.
     ///
     /// Returns:
     ///
@@ -139,10 +139,10 @@ impl NodeChildren {
             self.update_child_info(idx1);
             self.update_child_info(idx2);
             false
-        }
+        };
     }
 
-    /// Equi-distributes the children between the two child arrays,
+    /// Equip-distributes the children between the two child arrays,
     /// preserving ordering.
     pub fn distribute_with(&mut self, other: &mut Self) {
         let r_target_len = (self.len() + other.len()) / 2;
@@ -202,7 +202,7 @@ impl NodeChildren {
         self.0.pop()
     }
 
-    /// Inserts an item into the the array at the given index.
+    /// Inserts an item into the array at the given index.
     ///
     /// Increases length by one.  Panics if already full.  Preserves ordering
     /// of the other items.
@@ -210,7 +210,7 @@ impl NodeChildren {
         self.0.insert(idx, item)
     }
 
-    /// Inserts an element into a the array, and then splits it in half, returning
+    /// Inserts an element into an array, and then splits it in half, returning
     /// the right half.
     ///
     /// This works even when the array is full.
@@ -228,7 +228,7 @@ impl NodeChildren {
         self.push_split(extra)
     }
 
-    /// Removes the item at the given index from the the array.
+    /// Removes the item at the given index from the array.
     ///
     /// Decreases length by one.  Preserves ordering of the other items.
     pub fn remove(&mut self, idx: usize) -> (TextInfo, Arc<Node>) {
@@ -302,7 +302,7 @@ impl NodeChildren {
     #[inline(always)]
     pub fn search_by<F>(&self, pred: F) -> (usize, TextInfo)
     where
-        // (left-accumulated start info, left-accumulated end info)
+    // (left-accumulated start info, left-accumulated end info)
         F: Fn(TextInfo, TextInfo) -> bool,
     {
         debug_assert!(self.len() > 0);
@@ -362,16 +362,16 @@ impl NodeChildren {
         debug_assert!(
             utf16_idx
                 <= (accum.chars
-                    + accum.utf16_surrogates
-                    + self.info()[idx].chars
-                    + self.info()[idx].utf16_surrogates) as usize,
+                + accum.utf16_surrogates
+                + self.info()[idx].chars
+                + self.info()[idx].utf16_surrogates) as usize,
             "Index out of bounds."
         );
 
         (idx, accum)
     }
 
-    /// Same as `search_char_idx()` above, except that it only calulates the
+    /// Same as `search_char_idx()` above, except that it only calculates the
     /// left-side-accumulated _char_ index rather than the full text info.
     ///
     /// Return is (child_index, left_acc_char_index)
@@ -512,7 +512,7 @@ mod inner {
     use std::sync::Arc;
 
     /// This is essentially a fixed-capacity, stack-allocated `Vec`.  However,
-    /// it actually containts _two_ arrays rather than just one, but which
+    /// it actually contains _two_ arrays rather than just one, but which
     /// share a length.
     #[repr(C)]
     pub(crate) struct NodeChildrenInternal {
@@ -582,7 +582,7 @@ mod inner {
             // SAFETY: MaybeUninit<T> is layout compatible with T, and
             // the info from 0..len are guaranteed to be initialized
             (
-                unsafe{ mem::transmute::<&mut [MaybeUninit<TextInfo>], &mut [TextInfo]>(&mut self.info[..(self.len as usize)]) },
+                unsafe { mem::transmute::<&mut [MaybeUninit<TextInfo>], &mut [TextInfo]>(&mut self.info[..(self.len as usize)]) },
                 unsafe { mem::transmute::<&mut [MaybeUninit<Arc<Node>>], &mut [Arc<Node>]>(&mut self.nodes[..(self.len as usize)]) },
             )
         }
@@ -613,7 +613,7 @@ mod inner {
             })
         }
 
-        /// Inserts an item into the the array at the given index.
+        /// Inserts an item into the array at the given index.
         ///
         /// Increases length by one.  Panics if already full.  Preserves ordering
         /// of the other items.
@@ -641,7 +641,7 @@ mod inner {
             self.len += 1;
         }
 
-        /// Removes the item at the given index from the the array.
+        /// Removes the item at the given index from the array.
         ///
         /// Decreases length by one.  Preserves ordering of the other items.
         #[inline(always)]
@@ -725,7 +725,7 @@ mod inner {
                 ) {
                     assert!(Arc::ptr_eq(unsafe { &*a.as_ptr() }, unsafe {
                         &*b.as_ptr()
-                    },));
+                    }, ));
                 }
             }
 
