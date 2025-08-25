@@ -131,14 +131,14 @@ impl NodeText {
     }
 }
 
-impl std::cmp::PartialEq for NodeText {
+impl PartialEq for NodeText {
     fn eq(&self, other: &Self) -> bool {
         let (s1, s2): (&str, &str) = (self, other);
         s1 == s2
     }
 }
 
-impl<'a> PartialEq<NodeText> for &'a str {
+impl PartialEq<NodeText> for &str {
     fn eq(&self, other: &NodeText) -> bool {
         *self == (other as &str)
     }
@@ -162,7 +162,7 @@ impl std::fmt::Debug for NodeText {
     }
 }
 
-impl<'a> From<&'a str> for NodeText {
+impl From<&str> for NodeText {
     fn from(s: &str) -> Self {
         Self::from_str(s)
     }

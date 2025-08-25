@@ -51,9 +51,9 @@ impl Node {
     /// There are three parameters:
     /// - char_idx: the chunk that contains this char is fetched,
     /// - node_info: this is the text info of the node it's being called on.
-    ///              This makes it a little awkward to call, but is needed since
-    ///              it's actually the parent node that contains the text info,
-    ///              so the info needs to be passed in.
+    ///   This makes it a little awkward to call, but is needed since
+    ///   it's actually the parent node that contains the text info,
+    ///   fso the info needs to be passed in.
     /// - edit: the closure that receives the chunk and does the edits.
     ///
     /// The closure is effectively the termination case for the recursion,
@@ -155,7 +155,7 @@ impl Node {
                 if byte_start > 0 || byte_end < leaf_text.len() {
                     let seam = (byte_start == 0 && leaf_text.as_bytes()[byte_end] == 0x0A)
                         || (byte_end == leaf_text.len()
-                            && leaf_text.as_bytes()[byte_start - 1] == 0x0D);
+                        && leaf_text.as_bytes()[byte_start - 1] == 0x0D);
 
                     let seg_len = byte_end - byte_start; // Length of removal segement
                     if seg_len < (leaf_text.len() - seg_len) {
@@ -213,7 +213,7 @@ impl Node {
                 let handle_child = |children: &mut NodeChildren,
                                     child_i: usize,
                                     c_char_acc: usize|
-                 -> (bool, bool, TextInfo) {
+                                    -> (bool, bool, TextInfo) {
                     // Recurse into child
                     let tmp_info = children.info()[child_i];
                     let tmp_chars = children.info()[child_i].chars as usize;
@@ -253,7 +253,7 @@ impl Node {
                     children.search_char_idx_range(start_idx, end_idx);
 
                 // Both indices point into the same child
-                if l_child_i == r_child_i {
+                return if l_child_i == r_child_i {
                     let info = children.info()[l_child_i];
                     let (seam, mut needs_fix, new_info) =
                         handle_child(children, l_child_i, l_char_acc);
@@ -268,7 +268,7 @@ impl Node {
                         }
                     }
 
-                    return (node_info - info + new_info, seam, needs_fix);
+                    (node_info - info + new_info, seam, needs_fix)
                 }
                 // We're dealing with more than one child.
                 else {
@@ -316,8 +316,8 @@ impl Node {
                     }
 
                     // Return
-                    return (children.combined_info(), seam, needs_fix);
-                }
+                    (children.combined_info(), seam, needs_fix)
+                };
             }
         }
     }
@@ -355,17 +355,17 @@ impl Node {
             let residual =
                 Arc::make_mut(&mut children.nodes_mut()[last_i]).append_at_depth(other, depth - 1);
             children.update_child_info(last_i);
-            if let Some(extra_node) = residual {
+            return if let Some(extra_node) = residual {
                 if children.len() < MAX_CHILDREN {
                     children.push((extra_node.text_info(), extra_node));
-                    return None;
+                    None
                 } else {
                     let r_children = children.push_split((extra_node.text_info(), extra_node));
-                    return Some(Arc::new(Node::Internal(r_children)));
+                    Some(Arc::new(Node::Internal(r_children)))
                 }
             } else {
-                return None;
-            }
+                None
+            };
         } else {
             panic!("Reached leaf before getting to target depth.");
         }
@@ -403,19 +403,19 @@ impl Node {
             let residual =
                 Arc::make_mut(&mut children.nodes_mut()[0]).prepend_at_depth(other, depth - 1);
             children.update_child_info(0);
-            if let Some(extra_node) = residual {
+            return if let Some(extra_node) = residual {
                 if children.len() < MAX_CHILDREN {
                     children.insert(0, (extra_node.text_info(), extra_node));
-                    return None;
+                    None
                 } else {
                     let mut r_children =
                         children.insert_split(0, (extra_node.text_info(), extra_node));
                     std::mem::swap(children, &mut r_children);
-                    return Some(Arc::new(Node::Internal(r_children)));
+                    Some(Arc::new(Node::Internal(r_children)))
                 }
             } else {
-                return None;
-            }
+                None
+            };
         } else {
             panic!("Reached leaf before getting to target depth.");
         }
@@ -674,7 +674,7 @@ impl Node {
         }
     }
 
-    /// Debugging tool to make sure that all of the meta-data of the
+    /// Debugging tool to make sure that all the meta-data of the
     /// tree is consistent with the actual data.
     pub fn assert_integrity(&self) {
         match *self {
@@ -712,7 +712,7 @@ impl Node {
             Node::Leaf(ref text) => {
                 // Leaf size
                 if !is_root {
-                    assert!(text.len() > 0);
+                    assert!(!text.is_empty());
                 }
             }
             Node::Internal(ref children) => {
@@ -880,9 +880,9 @@ impl Node {
             loop {
                 let do_merge = (children.len() > 1)
                     && match *children.nodes()[0] {
-                        Node::Leaf(ref text) => text.len() < MIN_BYTES,
-                        Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
-                    };
+                    Node::Leaf(ref text) => text.len() < MIN_BYTES,
+                    Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
+                };
 
                 if do_merge {
                     did_stuff |= children.merge_distribute(0, 1);
@@ -909,9 +909,9 @@ impl Node {
                 let last_i = children.len() - 1;
                 let do_merge = (children.len() > 1)
                     && match *children.nodes()[last_i] {
-                        Node::Leaf(ref text) => text.len() < MIN_BYTES,
-                        Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
-                    };
+                    Node::Leaf(ref text) => text.len() < MIN_BYTES,
+                    Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
+                };
 
                 if do_merge {
                     did_stuff |= children.merge_distribute(last_i - 1, last_i);
@@ -952,10 +952,10 @@ impl Node {
                     } else {
                         do_merge = do_merge
                             || (start_info.chars as usize == char_idx
-                                && match *children.nodes()[child_i - 1] {
-                                    Node::Leaf(ref text) => text.len() < MIN_BYTES,
-                                    Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
-                                });
+                            && match *children.nodes()[child_i - 1] {
+                            Node::Leaf(ref text) => text.len() < MIN_BYTES,
+                            Node::Internal(ref children2) => children2.len() < MIN_CHILDREN,
+                        });
                         if do_merge {
                             let res = children.merge_distribute(child_i - 1, child_i);
                             did_stuff |= res

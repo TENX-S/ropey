@@ -1,6 +1,6 @@
 /// Returns whether the given byte index in `text` is a valid
 /// splitting point.  Valid splitting point in this case means
-/// that it _is_ a utf8 code point boundary and _is not_ the
+/// that it _is_ an utf8 code point boundary and _is not_ the
 /// middle of a CRLF pair.
 #[inline]
 pub fn is_break(byte_idx: usize, text: &[u8]) -> bool {
@@ -15,7 +15,7 @@ pub fn is_break(byte_idx: usize, text: &[u8]) -> bool {
 
 /// Returns whether the seam between `left` and `right` is a valid
 /// splitting point.  Valid splitting point in this case means
-/// that it _is_ a utf8 code point boundary and _is not_ the middle
+/// that it _is_ an utf8 code point boundary and _is not_ the middle
 /// of a CRLF pair.
 #[inline]
 pub fn seam_is_break(left: &[u8], right: &[u8]) -> bool {
@@ -86,11 +86,11 @@ pub fn nearest_internal_break(byte_idx: usize, text: &[u8]) -> usize {
 
     // Otherwise, return the closest of left and right that isn't the
     // start or end of the string
-    if left == 0 || (right != text.len() && (byte_idx - left) >= (right - byte_idx)) {
-        return right;
+    return if left == 0 || (right != text.len() && (byte_idx - left) >= (right - byte_idx)) {
+        right
     } else {
-        return left;
-    }
+        left
+    };
 }
 
 #[inline]

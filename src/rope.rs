@@ -14,7 +14,7 @@ use crate::str_utils::{
 use crate::tree::{Count, Node, NodeChildren, TextInfo, MAX_BYTES, MIN_BYTES};
 use crate::{end_bound_to_num, start_bound_to_num, Error, Result};
 
-/// A utf8 text rope.
+/// An utf8 text rope.
 ///
 /// The time complexity of nearly all edit and query operations on `Rope` are
 /// worst-case `O(log N)` in the length of the rope.  `Rope` is designed to
@@ -71,7 +71,7 @@ use crate::{end_bound_to_num, start_bound_to_num, Error, Result};
 /// Cloning `Rope`s is extremely cheap, running in `O(1)` time and taking a
 /// small constant amount of memory for the new clone, regardless of text size.
 /// This is accomplished by data sharing between `Rope` clones.  The memory
-/// used by clones only grows incrementally as the their contents diverge due
+/// used by clones only grows incrementally as the contents diverge due
 /// to edits.  All of this is thread safe, so clones can be sent freely
 /// between threads.
 ///
@@ -171,15 +171,15 @@ impl Rope {
 
                     // If we're done reading
                     if read_count == 0 {
-                        if fill_idx > 0 {
+                        return if fill_idx > 0 {
                             // We couldn't consume all data.
-                            return Err(io::Error::new(
+                            Err(io::Error::new(
                                 io::ErrorKind::InvalidData,
                                 "stream contained invalid UTF-8",
-                            ));
+                            ))
                         } else {
-                            return Ok(builder.finish());
-                        }
+                            Ok(builder.finish())
+                        };
                     }
                 }
 
@@ -429,7 +429,7 @@ impl Rope {
                 else {
                     let r_text = leaf_text.insert_str_split(byte_idx, ins_text);
                     let l_text_info = TextInfo::from_str(leaf_text);
-                    if r_text.len() > 0 {
+                    if !r_text.is_empty() {
                         let r_text_info = TextInfo::from_str(&r_text);
                         (
                             l_text_info,
@@ -489,7 +489,7 @@ impl Rope {
                     else {
                         let r_text = leaf_text.insert_str_split(byte_idx, "\n");
                         let l_text_info = TextInfo::from_str(leaf_text);
-                        if r_text.len() > 0 {
+                        if !r_text.is_empty() {
                             let r_text_info = TextInfo::from_str(&r_text);
                             (
                                 l_text_info,
@@ -620,7 +620,7 @@ impl Rope {
     ///
     /// Notes:
     ///
-    /// - If the byte is in the middle of a multi-byte char, returns the
+    /// - If the byte is in the middle of a multibyte char, returns the
     ///   index of the char that the byte belongs to.
     /// - `byte_idx` can be one-past-the-end, which will return
     ///   one-past-the-end char index.
@@ -818,7 +818,7 @@ impl Rope {
     ///
     /// Panics if `line_idx` is out of bounds (i.e. `line_idx >= len_lines()`).
     #[inline]
-    pub fn line(&self, line_idx: usize) -> RopeSlice {
+    pub fn line(&'_ self, line_idx: usize) -> RopeSlice<'_> {
         if let Some(out) = self.get_line(line_idx) {
             out
         } else {
@@ -945,7 +945,7 @@ impl Rope {
     /// Panics if the start of the range is greater than the end, or if the
     /// end is out of bounds (i.e. `end > len_chars()`).
     #[inline]
-    pub fn slice<R>(&self, char_range: R) -> RopeSlice
+    pub fn slice<R>(&'_ self, char_range: R) -> RopeSlice<'_>
     where
         R: RangeBounds<usize>,
     {
@@ -964,7 +964,7 @@ impl Rope {
     /// - The start of the range is greater than the end.
     /// - The end is out of bounds (i.e. `end > len_bytes()`).
     /// - The range doesn't align with char boundaries.
-    pub fn byte_slice<R>(&self, byte_range: R) -> RopeSlice
+    pub fn byte_slice<R>(&'_ self, byte_range: R) -> RopeSlice<'_>
     where
         R: RangeBounds<usize>,
     {
@@ -981,7 +981,7 @@ impl Rope {
     ///
     /// Runs in O(log N) time.
     #[inline]
-    pub fn bytes(&self) -> Bytes {
+    pub fn bytes(&'_ self) -> Bytes<'_> {
         Bytes::new(&self.root)
     }
 
@@ -997,7 +997,7 @@ impl Rope {
     ///
     /// Panics if `byte_idx` is out of bounds (i.e. `byte_idx > len_bytes()`).
     #[inline]
-    pub fn bytes_at(&self, byte_idx: usize) -> Bytes {
+    pub fn bytes_at(&'_ self, byte_idx: usize) -> Bytes<'_> {
         if let Some(out) = self.get_bytes_at(byte_idx) {
             out
         } else {
@@ -1013,7 +1013,7 @@ impl Rope {
     ///
     /// Runs in O(log N) time.
     #[inline]
-    pub fn chars(&self) -> Chars {
+    pub fn chars(&'_ self) -> Chars<'_> {
         Chars::new(&self.root)
     }
 
@@ -1029,7 +1029,7 @@ impl Rope {
     ///
     /// Panics if `char_idx` is out of bounds (i.e. `char_idx > len_chars()`).
     #[inline]
-    pub fn chars_at(&self, char_idx: usize) -> Chars {
+    pub fn chars_at(&'_ self, char_idx: usize) -> Chars<'_> {
         if let Some(out) = self.get_chars_at(char_idx) {
             out
         } else {
@@ -1045,7 +1045,7 @@ impl Rope {
     ///
     /// Runs in O(log N) time.
     #[inline]
-    pub fn lines(&self) -> Lines {
+    pub fn lines(&'_ self) -> Lines<'_> {
         Lines::new(&self.root)
     }
 
@@ -1061,7 +1061,7 @@ impl Rope {
     ///
     /// Panics if `line_idx` is out of bounds (i.e. `line_idx > len_lines()`).
     #[inline]
-    pub fn lines_at(&self, line_idx: usize) -> Lines {
+    pub fn lines_at(&'_ self, line_idx: usize) -> Lines<'_> {
         if let Some(out) = self.get_lines_at(line_idx) {
             out
         } else {
@@ -1077,7 +1077,7 @@ impl Rope {
     ///
     /// Runs in O(log N) time.
     #[inline]
-    pub fn chunks(&self) -> Chunks {
+    pub fn chunks(&'_ self) -> Chunks<'_> {
         Chunks::new(&self.root)
     }
 
@@ -1099,7 +1099,7 @@ impl Rope {
     ///
     /// Panics if `byte_idx` is out of bounds (i.e. `byte_idx > len_bytes()`).
     #[inline]
-    pub fn chunks_at_byte(&self, byte_idx: usize) -> (Chunks, usize, usize, usize) {
+    pub fn chunks_at_byte(&'_ self, byte_idx: usize) -> (Chunks<'_>, usize, usize, usize) {
         if let Some(out) = self.get_chunks_at_byte(byte_idx) {
             out
         } else {
@@ -1129,7 +1129,7 @@ impl Rope {
     ///
     /// Panics if `char_idx` is out of bounds (i.e. `char_idx > len_chars()`).
     #[inline]
-    pub fn chunks_at_char(&self, char_idx: usize) -> (Chunks, usize, usize, usize) {
+    pub fn chunks_at_char(&'_ self, char_idx: usize) -> (Chunks<'_>, usize, usize, usize) {
         if let Some(out) = self.get_chunks_at_char(char_idx) {
             out
         } else {
@@ -1163,7 +1163,7 @@ impl Rope {
     ///
     /// Panics if `line_break_idx` is out of bounds (i.e. `line_break_idx > len_lines()`).
     #[inline]
-    pub fn chunks_at_line_break(&self, line_break_idx: usize) -> (Chunks, usize, usize, usize) {
+    pub fn chunks_at_line_break(&'_ self, line_break_idx: usize) -> (Chunks<'_>, usize, usize, usize) {
         if let Some(out) = self.get_chunks_at_line_break(line_break_idx) {
             out
         } else {
@@ -1201,7 +1201,7 @@ impl Rope {
 
     /// NOT PART OF THE PUBLIC API (hidden from docs for a reason!)
     ///
-    /// Debugging tool to make sure that all of the meta-data of the
+    /// Debugging tool to make sure that all the meta-data of the
     /// tree is consistent with the actual data.
     #[doc(hidden)]
     pub fn assert_integrity(&self) {
@@ -1210,7 +1210,7 @@ impl Rope {
 
     /// NOT PART OF THE PUBLIC API (hidden from docs for a reason!)
     ///
-    /// Debugging tool to make sure that all of the following invariants
+    /// Debugging tool to make sure that all the following invariants
     /// hold true throughout the tree:
     ///
     /// - The tree is the same height everywhere.
@@ -1550,7 +1550,7 @@ impl Rope {
 
     /// Non-panicking version of [`line()`](Rope::line).
     #[inline]
-    pub fn get_line(&self, line_idx: usize) -> Option<RopeSlice> {
+    pub fn get_line(&'_ self, line_idx: usize) -> Option<RopeSlice<'_>> {
         use crate::slice::RSEnum;
         use crate::str_utils::{count_chars, count_utf16_surrogates};
 
@@ -1635,7 +1635,7 @@ impl Rope {
 
     /// Non-panicking version of [`slice()`](Rope::slice).
     #[inline]
-    pub fn get_slice<R>(&self, char_range: R) -> Option<RopeSlice>
+    pub fn get_slice<R>(&'_ self, char_range: R) -> Option<RopeSlice<'_>>
     where
         R: RangeBounds<usize>,
     {
@@ -1652,14 +1652,14 @@ impl Rope {
 
     /// Non-panicking version of [`byte_slice()`](Rope::byte_slice).
     #[inline]
-    pub fn get_byte_slice<R>(&self, byte_range: R) -> Option<RopeSlice>
+    pub fn get_byte_slice<R>(&'_ self, byte_range: R) -> Option<RopeSlice<'_>>
     where
         R: RangeBounds<usize>,
     {
         self.get_byte_slice_impl(byte_range).ok()
     }
 
-    pub(crate) fn get_byte_slice_impl<R>(&self, byte_range: R) -> Result<RopeSlice>
+    pub(crate) fn get_byte_slice_impl<R>(&'_ self, byte_range: R) -> Result<RopeSlice<'_>>
     where
         R: RangeBounds<usize>,
     {
@@ -1716,7 +1716,7 @@ impl Rope {
 
     /// Non-panicking version of [`bytes_at()`](Rope::bytes_at).
     #[inline]
-    pub fn get_bytes_at(&self, byte_idx: usize) -> Option<Bytes> {
+    pub fn get_bytes_at(&'_ self, byte_idx: usize) -> Option<Bytes<'_>> {
         // Bounds check
         if byte_idx <= self.len_bytes() {
             let info = self.root.text_info();
@@ -1734,7 +1734,7 @@ impl Rope {
 
     /// Non-panicking version of [`chars_at()`](Rope::chars_at).
     #[inline]
-    pub fn get_chars_at(&self, char_idx: usize) -> Option<Chars> {
+    pub fn get_chars_at(&'_ self, char_idx: usize) -> Option<Chars<'_>> {
         // Bounds check
         if char_idx <= self.len_chars() {
             let info = self.root.text_info();
@@ -1752,7 +1752,7 @@ impl Rope {
 
     /// Non-panicking version of [`lines_at()`](Rope::lines_at).
     #[inline]
-    pub fn get_lines_at(&self, line_idx: usize) -> Option<Lines> {
+    pub fn get_lines_at(&'_ self, line_idx: usize) -> Option<Lines<'_>> {
         // Bounds check
         if line_idx <= self.len_lines() {
             Some(Lines::new_with_range_at(
@@ -1768,7 +1768,7 @@ impl Rope {
 
     /// Non-panicking version of [`chunks_at_byte()`](Rope::chunks_at_byte).
     #[inline]
-    pub fn get_chunks_at_byte(&self, byte_idx: usize) -> Option<(Chunks, usize, usize, usize)> {
+    pub fn get_chunks_at_byte(&'_ self, byte_idx: usize) -> Option<(Chunks<'_>, usize, usize, usize)> {
         // Bounds check
         if byte_idx <= self.len_bytes() {
             Some(Chunks::new_with_range_at_byte(
@@ -1785,7 +1785,7 @@ impl Rope {
 
     /// Non-panicking version of [`chunks_at_char()`](Rope::chunks_at_char).
     #[inline]
-    pub fn get_chunks_at_char(&self, char_idx: usize) -> Option<(Chunks, usize, usize, usize)> {
+    pub fn get_chunks_at_char(&'_ self, char_idx: usize) -> Option<(Chunks<'_>, usize, usize, usize)> {
         // Bounds check
         if char_idx <= self.len_chars() {
             Some(Chunks::new_with_range_at_char(
@@ -1803,9 +1803,9 @@ impl Rope {
     /// Non-panicking version of [`chunks_at_line_break()`](Rope::chunks_at_line_break).
     #[inline]
     pub fn get_chunks_at_line_break(
-        &self,
+        &'_ self,
         line_break_idx: usize,
-    ) -> Option<(Chunks, usize, usize, usize)> {
+    ) -> Option<(Chunks<'_>, usize, usize, usize)> {
         // Bounds check
         if line_break_idx <= self.len_lines() {
             Some(Chunks::new_with_range_at_line_break(
@@ -1853,10 +1853,10 @@ impl<'a> From<RopeSlice<'a>> for Rope {
         use crate::slice::RSEnum;
         match s {
             RopeSlice(RSEnum::Full {
-                node,
-                start_info,
-                end_info,
-            }) => {
+                          node,
+                          start_info,
+                          end_info,
+                      }) => {
                 let mut rope = Rope {
                     root: Arc::clone(node),
                 };
@@ -1930,7 +1930,7 @@ impl<'a> From<&'a Rope> for std::borrow::Cow<'a, str> {
 impl<'a> FromIterator<&'a str> for Rope {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = &'a str>,
+        T: IntoIterator<Item=&'a str>,
     {
         let mut builder = RopeBuilder::new();
         for chunk in iter {
@@ -1943,7 +1943,7 @@ impl<'a> FromIterator<&'a str> for Rope {
 impl<'a> FromIterator<std::borrow::Cow<'a, str>> for Rope {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = std::borrow::Cow<'a, str>>,
+        T: IntoIterator<Item=std::borrow::Cow<'a, str>>,
     {
         let mut builder = RopeBuilder::new();
         for chunk in iter {
@@ -1956,7 +1956,7 @@ impl<'a> FromIterator<std::borrow::Cow<'a, str>> for Rope {
 impl FromIterator<String> for Rope {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = String>,
+        T: IntoIterator<Item=String>,
     {
         let mut builder = RopeBuilder::new();
         for chunk in iter {
@@ -1985,86 +1985,86 @@ impl std::fmt::Display for Rope {
     }
 }
 
-impl std::default::Default for Rope {
+impl Default for Rope {
     #[inline]
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl std::cmp::Eq for Rope {}
+impl Eq for Rope {}
 
-impl std::cmp::PartialEq<Rope> for Rope {
+impl PartialEq<Rope> for Rope {
     #[inline]
     fn eq(&self, other: &Rope) -> bool {
         self.slice(..) == other.slice(..)
     }
 }
 
-impl<'a> std::cmp::PartialEq<&'a str> for Rope {
+impl<'a> PartialEq<&'a str> for Rope {
     #[inline]
     fn eq(&self, other: &&'a str) -> bool {
         self.slice(..) == *other
     }
 }
 
-impl<'a> std::cmp::PartialEq<Rope> for &'a str {
+impl PartialEq<Rope> for &str {
     #[inline]
     fn eq(&self, other: &Rope) -> bool {
         *self == other.slice(..)
     }
 }
 
-impl std::cmp::PartialEq<str> for Rope {
+impl PartialEq<str> for Rope {
     #[inline]
     fn eq(&self, other: &str) -> bool {
         self.slice(..) == other
     }
 }
 
-impl std::cmp::PartialEq<Rope> for str {
+impl PartialEq<Rope> for str {
     #[inline]
     fn eq(&self, other: &Rope) -> bool {
         self == other.slice(..)
     }
 }
 
-impl std::cmp::PartialEq<String> for Rope {
+impl PartialEq<String> for Rope {
     #[inline]
     fn eq(&self, other: &String) -> bool {
         self.slice(..) == other.as_str()
     }
 }
 
-impl std::cmp::PartialEq<Rope> for String {
+impl PartialEq<Rope> for String {
     #[inline]
     fn eq(&self, other: &Rope) -> bool {
         self.as_str() == other.slice(..)
     }
 }
 
-impl<'a> std::cmp::PartialEq<std::borrow::Cow<'a, str>> for Rope {
+impl<'a> PartialEq<std::borrow::Cow<'a, str>> for Rope {
     #[inline]
     fn eq(&self, other: &std::borrow::Cow<'a, str>) -> bool {
         self.slice(..) == **other
     }
 }
 
-impl<'a> std::cmp::PartialEq<Rope> for std::borrow::Cow<'a, str> {
+impl<'a> PartialEq<Rope> for std::borrow::Cow<'a, str> {
     #[inline]
     fn eq(&self, other: &Rope) -> bool {
         **self == other.slice(..)
     }
 }
 
-impl std::cmp::Ord for Rope {
+impl Ord for Rope {
     #[inline]
     fn cmp(&self, other: &Rope) -> std::cmp::Ordering {
         self.slice(..).cmp(&other.slice(..))
     }
 }
 
-impl std::cmp::PartialOrd<Rope> for Rope {
+impl PartialOrd<Rope> for Rope {
     #[inline]
     fn partial_cmp(&self, other: &Rope) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
@@ -3325,7 +3325,7 @@ mod tests {
     fn to_cow_02() {
         use std::borrow::Cow;
         let r = Rope::from_str(TEXT);
-        let cow: Cow<str> = (r.clone()).into();
+        let cow: Cow<str> = r.clone().into();
 
         assert_eq!(r, cow);
     }

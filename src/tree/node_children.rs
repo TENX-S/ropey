@@ -24,7 +24,7 @@ impl NodeChildren {
 
     /// Current length of the array.
     pub fn len(&self) -> usize {
-        self.0.len() as usize
+        self.0.len()
     }
 
     /// Returns whether the array is full or not.
@@ -75,7 +75,7 @@ impl NodeChildren {
     ///
     /// This works even when the array is full.
     pub fn push_split(&mut self, new_child: (TextInfo, Arc<Node>)) -> Self {
-        let r_count = (self.len() + 1) / 2;
+        let r_count = self.len().div_ceil(2);
         let l_count = (self.len() + 1) - r_count;
 
         let mut right = self.split_off(l_count);
@@ -84,7 +84,7 @@ impl NodeChildren {
     }
 
     /// Attempts to merge two nodes, and if it's too much data to merge
-    /// equi-distributes it between the two.
+    /// equip-distributes it between the two.
     ///
     /// Returns:
     ///
@@ -131,18 +131,18 @@ impl NodeChildren {
             }
         };
 
-        if remove_right {
+        return if remove_right {
             self.remove(idx2);
             self.update_child_info(idx1);
-            return true;
+            true
         } else {
             self.update_child_info(idx1);
             self.update_child_info(idx2);
-            return false;
-        }
+            false
+        };
     }
 
-    /// Equi-distributes the children between the two child arrays,
+    /// Equip-distributes the children between the two child arrays,
     /// preserving ordering.
     pub fn distribute_with(&mut self, other: &mut Self) {
         let r_target_len = (self.len() + other.len()) / 2;
@@ -202,7 +202,7 @@ impl NodeChildren {
         self.0.pop()
     }
 
-    /// Inserts an item into the the array at the given index.
+    /// Inserts an item into the array at the given index.
     ///
     /// Increases length by one.  Panics if already full.  Preserves ordering
     /// of the other items.
@@ -210,7 +210,7 @@ impl NodeChildren {
         self.0.insert(idx, item)
     }
 
-    /// Inserts an element into a the array, and then splits it in half, returning
+    /// Inserts an element into an array, and then splits it in half, returning
     /// the right half.
     ///
     /// This works even when the array is full.
@@ -228,7 +228,7 @@ impl NodeChildren {
         self.push_split(extra)
     }
 
-    /// Removes the item at the given index from the the array.
+    /// Removes the item at the given index from the array.
     ///
     /// Decreases length by one.  Preserves ordering of the other items.
     pub fn remove(&mut self, idx: usize) -> (TextInfo, Arc<Node>) {
@@ -277,7 +277,7 @@ impl NodeChildren {
     }
 
     /// Creates an iterator over the array's items.
-    pub fn iter(&self) -> Zip<slice::Iter<TextInfo>, slice::Iter<Arc<Node>>> {
+    pub fn iter(&'_ self) -> Zip<slice::Iter<'_, TextInfo>, slice::Iter<'_, Arc<Node>>> {
         Iterator::zip(self.info().iter(), self.nodes().iter())
     }
 
@@ -302,7 +302,7 @@ impl NodeChildren {
     #[inline(always)]
     pub fn search_by<F>(&self, pred: F) -> (usize, TextInfo)
     where
-        // (left-accumulated start info, left-accumulated end info)
+    // (left-accumulated start info, left-accumulated end info)
         F: Fn(TextInfo, TextInfo) -> bool,
     {
         debug_assert!(self.len() > 0);
@@ -362,16 +362,16 @@ impl NodeChildren {
         debug_assert!(
             utf16_idx
                 <= (accum.chars
-                    + accum.utf16_surrogates
-                    + self.info()[idx].chars
-                    + self.info()[idx].utf16_surrogates) as usize,
+                + accum.utf16_surrogates
+                + self.info()[idx].chars
+                + self.info()[idx].utf16_surrogates) as usize,
             "Index out of bounds."
         );
 
         (idx, accum)
     }
 
-    /// Same as `search_char_idx()` above, except that it only calulates the
+    /// Same as `search_char_idx()` above, except that it only calculates the
     /// left-side-accumulated _char_ index rather than the full text info.
     ///
     /// Return is (child_index, left_acc_char_index)
@@ -393,7 +393,7 @@ impl NodeChildren {
         }
 
         debug_assert!(
-            char_idx <= (accum_char_idx + self.info()[idx].chars as usize) as usize,
+            char_idx <= (accum_char_idx + self.info()[idx].chars as usize),
             "Index out of bounds."
         );
 
@@ -512,7 +512,7 @@ mod inner {
     use std::sync::Arc;
 
     /// This is essentially a fixed-capacity, stack-allocated `Vec`.  However,
-    /// it actually containts _two_ arrays rather than just one, but which
+    /// it actually contains _two_ arrays rather than just one, but which
     /// share a length.
     #[repr(C)]
     pub(crate) struct NodeChildrenInternal {
@@ -549,7 +549,7 @@ mod inner {
         pub fn nodes(&self) -> &[Arc<Node>] {
             // SAFETY: MaybeUninit<T> is layout compatible with T, and
             // the nodes from 0..len are guaranteed to be initialized
-            unsafe { mem::transmute(&self.nodes[..(self.len())]) }
+            unsafe { mem::transmute(&self.nodes[..self.len()]) }
         }
 
         /// Mutable access to the nodes array.
@@ -565,7 +565,7 @@ mod inner {
         pub fn info(&self) -> &[TextInfo] {
             // SAFETY: MaybeUninit<T> is layout compatible with T, and
             // the info from 0..len are guaranteed to be initialized
-            unsafe { mem::transmute(&self.info[..(self.len())]) }
+            unsafe { mem::transmute(&self.info[..self.len()]) }
         }
 
         /// Mutable access to the info array.
@@ -582,8 +582,8 @@ mod inner {
             // SAFETY: MaybeUninit<T> is layout compatible with T, and
             // the info from 0..len are guaranteed to be initialized
             (
-                unsafe { mem::transmute(&mut self.info[..(self.len as usize)]) },
-                unsafe { mem::transmute(&mut self.nodes[..(self.len as usize)]) },
+                unsafe { mem::transmute::<&mut [MaybeUninit<TextInfo>], &mut [TextInfo]>(&mut self.info[..(self.len as usize)]) },
+                unsafe { mem::transmute::<&mut [MaybeUninit<Arc<Node>>], &mut [Arc<Node>]>(&mut self.nodes[..(self.len as usize)]) },
             )
         }
 
@@ -613,7 +613,7 @@ mod inner {
             })
         }
 
-        /// Inserts an item into the the array at the given index.
+        /// Inserts an item into the array at the given index.
         ///
         /// Increases length by one.  Panics if already full.  Preserves ordering
         /// of the other items.
@@ -641,7 +641,7 @@ mod inner {
             self.len += 1;
         }
 
-        /// Removes the item at the given index from the the array.
+        /// Removes the item at the given index from the array.
         ///
         /// Decreases length by one.  Preserves ordering of the other items.
         #[inline(always)]
@@ -713,19 +713,19 @@ mod inner {
             #[cfg(debug_assertions)]
             {
                 for (a, b) in Iterator::zip(
-                    (&clone_array.info[..clone_array.len()]).iter(),
-                    (&self.info[..self.len()]).iter(),
+                    clone_array.info[..clone_array.len()].iter(),
+                    self.info[..self.len()].iter(),
                 ) {
                     assert_eq!(unsafe { a.assume_init() }, unsafe { b.assume_init() },);
                 }
 
                 for (a, b) in Iterator::zip(
-                    (&clone_array.nodes[..clone_array.len()]).iter(),
-                    (&self.nodes[..clone_array.len()]).iter(),
+                    clone_array.nodes[..clone_array.len()].iter(),
+                    self.nodes[..clone_array.len()].iter(),
                 ) {
                     assert!(Arc::ptr_eq(unsafe { &*a.as_ptr() }, unsafe {
                         &*b.as_ptr()
-                    },));
+                    }, ));
                 }
             }
 
@@ -833,57 +833,57 @@ mod tests {
         let at_12_12 = children.search_char_idx_range(12, 12);
         let at_18_18 = children.search_char_idx_range(18, 18);
 
-        assert_eq!(0, (at_0_0.0).0);
-        assert_eq!(0, (at_0_0.1).0);
-        assert_eq!(0, (at_0_0.0).1);
-        assert_eq!(0, (at_0_0.1).1);
+        assert_eq!(0, at_0_0.0.0);
+        assert_eq!(0, at_0_0.1.0);
+        assert_eq!(0, at_0_0.0.1);
+        assert_eq!(0, at_0_0.1.1);
 
-        assert_eq!(1, (at_6_6.0).0);
-        assert_eq!(1, (at_6_6.1).0);
-        assert_eq!(6, (at_6_6.0).1);
-        assert_eq!(6, (at_6_6.1).1);
+        assert_eq!(1, at_6_6.0.0);
+        assert_eq!(1, at_6_6.1.0);
+        assert_eq!(6, at_6_6.0.1);
+        assert_eq!(6, at_6_6.1.1);
 
-        assert_eq!(2, (at_12_12.0).0);
-        assert_eq!(2, (at_12_12.1).0);
-        assert_eq!(12, (at_12_12.0).1);
-        assert_eq!(12, (at_12_12.1).1);
+        assert_eq!(2, at_12_12.0.0);
+        assert_eq!(2, at_12_12.1.0);
+        assert_eq!(12, at_12_12.0.1);
+        assert_eq!(12, at_12_12.1.1);
 
-        assert_eq!(2, (at_18_18.0).0);
-        assert_eq!(2, (at_18_18.1).0);
-        assert_eq!(12, (at_18_18.0).1);
-        assert_eq!(12, (at_18_18.1).1);
+        assert_eq!(2, at_18_18.0.0);
+        assert_eq!(2, at_18_18.1.0);
+        assert_eq!(12, at_18_18.0.1);
+        assert_eq!(12, at_18_18.1.1);
 
         let at_0_6 = children.search_char_idx_range(0, 6);
         let at_6_12 = children.search_char_idx_range(6, 12);
         let at_12_18 = children.search_char_idx_range(12, 18);
 
-        assert_eq!(0, (at_0_6.0).0);
-        assert_eq!(0, (at_0_6.1).0);
-        assert_eq!(0, (at_0_6.0).1);
-        assert_eq!(0, (at_0_6.1).1);
+        assert_eq!(0, at_0_6.0.0);
+        assert_eq!(0, at_0_6.1.0);
+        assert_eq!(0, at_0_6.0.1);
+        assert_eq!(0, at_0_6.1.1);
 
-        assert_eq!(1, (at_6_12.0).0);
-        assert_eq!(1, (at_6_12.1).0);
-        assert_eq!(6, (at_6_12.0).1);
-        assert_eq!(6, (at_6_12.1).1);
+        assert_eq!(1, at_6_12.0.0);
+        assert_eq!(1, at_6_12.1.0);
+        assert_eq!(6, at_6_12.0.1);
+        assert_eq!(6, at_6_12.1.1);
 
-        assert_eq!(2, (at_12_18.0).0);
-        assert_eq!(2, (at_12_18.1).0);
-        assert_eq!(12, (at_12_18.0).1);
-        assert_eq!(12, (at_12_18.1).1);
+        assert_eq!(2, at_12_18.0.0);
+        assert_eq!(2, at_12_18.1.0);
+        assert_eq!(12, at_12_18.0.1);
+        assert_eq!(12, at_12_18.1.1);
 
         let at_5_7 = children.search_char_idx_range(5, 7);
         let at_11_13 = children.search_char_idx_range(11, 13);
 
-        assert_eq!(0, (at_5_7.0).0);
-        assert_eq!(1, (at_5_7.1).0);
-        assert_eq!(0, (at_5_7.0).1);
-        assert_eq!(6, (at_5_7.1).1);
+        assert_eq!(0, at_5_7.0.0);
+        assert_eq!(1, at_5_7.1.0);
+        assert_eq!(0, at_5_7.0.1);
+        assert_eq!(6, at_5_7.1.1);
 
-        assert_eq!(1, (at_11_13.0).0);
-        assert_eq!(2, (at_11_13.1).0);
-        assert_eq!(6, (at_11_13.0).1);
-        assert_eq!(12, (at_11_13.1).1);
+        assert_eq!(1, at_11_13.0.0);
+        assert_eq!(2, at_11_13.1.0);
+        assert_eq!(6, at_11_13.0.1);
+        assert_eq!(12, at_11_13.1.1);
     }
 
     #[test]
