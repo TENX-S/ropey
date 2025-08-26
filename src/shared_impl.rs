@@ -1297,7 +1297,7 @@ macro_rules! shared_std_impls {
             #[inline]
             fn from(r: &'a $rope) -> Self {
                 match r.get_root() {
-                    Node::Leaf(ref text) => {
+                    &Node::Leaf(ref text) => {
                         let [start, end] = r.get_byte_range();
                         Some(&text.text()[start..end])
                     }
@@ -1314,7 +1314,7 @@ macro_rules! shared_std_impls {
             #[inline]
             fn from(r: &'a $rope) -> Self {
                 match r.get_root() {
-                    Node::Leaf(ref text) => {
+                    &Node::Leaf(ref text) => {
                         let [start, end] = r.get_byte_range();
                         std::borrow::Cow::Borrowed(&text.text()[start..end])
                     }

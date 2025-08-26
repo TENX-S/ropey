@@ -65,7 +65,7 @@ fn assert_metrics_eq(rope: &RopeSlice, text: &str) {
     {
         assert_eq!(
             rope.len_lines(LineType::LF_CR),
-            str_indices::lines_crlf::count_breaks(text) + 1
+            lines_crlf::count_breaks(text) + 1
         );
     }
 
@@ -88,7 +88,7 @@ fn prev_line_byte_idx(text: &str) -> usize {
         }
     }
 
-    return 0;
+    0
 }
 
 /// Constructs both a Rope-based slice and str-based slice, with the
@@ -339,8 +339,8 @@ proptest::proptest! {
             let mut line_txt = &text[..];
 
             let mut idx = 0;
-            for line in t.lines(ropey::LineType::LF_CR) {
-                let next_idx = str_indices::lines_crlf::to_byte_idx(line_txt, 1);
+            for line in t.lines(LineType::LF_CR) {
+                let next_idx = lines_crlf::to_byte_idx(line_txt, 1);
                 let txt_chunk = &line_txt[..next_idx];
                 line_txt = &line_txt[next_idx..];
                 assert_eq!(line, txt_chunk);
@@ -400,8 +400,8 @@ proptest::proptest! {
             let mut line_txt = &text[..];
 
             let mut idx = 0;
-            for line in s.lines(ropey::LineType::LF_CR) {
-                let next_idx = str_indices::lines_crlf::to_byte_idx(line_txt, 1);
+            for line in s.lines(LineType::LF_CR) {
+                let next_idx = lines_crlf::to_byte_idx(line_txt, 1);
                 let txt_chunk = &line_txt[..next_idx];
                 line_txt = &line_txt[next_idx..];
                 assert_eq!(line, txt_chunk);

@@ -55,9 +55,9 @@ impl<'a> RopeSlice<'a> {
         // Special case for performance, since this actually comes up a fair bit.
         if byte_range[0] == 0 && byte_range[1] == root_info.bytes {
             return RopeSlice(SliceInner::Rope {
-                root: root,
-                root_info: root_info,
-                byte_range: byte_range,
+                root,
+                root_info,
+                byte_range,
             });
         }
 
@@ -224,7 +224,7 @@ impl<'a> RopeSlice<'a> {
 // Impls shared between Rope and RopeSlice.
 crate::shared_impl::shared_std_impls!(RopeSlice<'_>);
 
-impl std::cmp::PartialEq<Rope> for RopeSlice<'_> {
+impl PartialEq<Rope> for RopeSlice<'_> {
     #[inline(always)]
     fn eq(&self, other: &Rope) -> bool {
         *self == RopeSlice::from(other)
@@ -261,7 +261,7 @@ impl<'a> From<RopeSlice<'a>> for std::borrow::Cow<'a, str> {
             RopeSlice(SliceInner::Rope {
                 root, byte_range, ..
             }) => match root {
-                Node::Leaf(ref text) => {
+                Node::Leaf(text) => {
                     std::borrow::Cow::Borrowed(&text.text()[byte_range[0]..byte_range[1]])
                 }
                 Node::Internal(_) => std::borrow::Cow::Owned(String::from(r)),

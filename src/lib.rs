@@ -335,7 +335,7 @@ pub(crate) fn floor_char_boundary(mut byte_idx: usize, text: &[u8]) -> usize {
 
     // The redundant `< text.len()` bounds check is for code gen.  For some
     // reason the compiler (at time of writing) can't infer that `>= text.len()`
-    // is impossible from the if clause above without this, and that in turn
+    // is impossible from the if-clause above without this, and that in turn
     // results in needlessly bloated code gen.
     while byte_idx > 0 && byte_idx < text.len() && !is_char_boundary(byte_idx, text) {
         byte_idx -= 1;

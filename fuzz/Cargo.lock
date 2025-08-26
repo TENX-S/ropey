@@ -60,6 +60,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "memchr"
+version = "2.7.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32a282da65faaf38286cf3be983213fcf1d2e2a58700e808f83f4ea9a4804bc0"
+
+[[package]]
 name = "once_cell"
 version = "1.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -85,8 +91,9 @@ dependencies = [
 
 [[package]]
 name = "ropey"
-version = "2.0.0-alpha"
+version = "2.0.0-beta.1"
 dependencies = [
+ "memchr",
  "str_indices",
 ]
 

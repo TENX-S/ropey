@@ -53,14 +53,34 @@ pub(crate) mod lines {
 
     #[inline(always)]
     pub(crate) fn to_byte_idx(text: &str, byte_idx: usize, line_type: LineType) -> usize {
-        match line_type {
-            #[cfg(feature = "metric_lines_lf")]
-            LineType::LF => str_indices::lines_lf::to_byte_idx(text, byte_idx),
-            #[cfg(feature = "metric_lines_lf_cr")]
-            LineType::LF_CR => str_indices::lines_crlf::to_byte_idx(text, byte_idx),
-            #[cfg(feature = "metric_lines_unicode")]
-            LineType::Unicode => str_indices::lines::to_byte_idx(text, byte_idx),
-        }
+        return if !cfg!(feature = "metric_lines_unicode") && byte_idx == 1 {
+            #[allow(unused_variables)]
+            let offset: Option<usize> = match line_type {
+                #[cfg(feature = "metric_lines_lf")]
+                LineType::LF => memchr::memchr(b'\n', text.as_bytes()),
+                #[cfg(feature = "metric_lines_lf_cr")]
+                LineType::LF_CR => memchr::memchr2(b'\n', b'\r', text.as_bytes()),
+                #[allow(unreachable_patterns)]
+                _ => unreachable!(),
+            };
+
+            #[allow(unreachable_code)]
+            match offset {
+                #[cfg(feature = "metric_lines_lf_cr")]
+                Some(i) if text[i..].starts_with("\r\n") => i + 2,
+                Some(i) => i + 1,
+                None => text.len(),
+            }
+        } else {
+            match line_type {
+                #[cfg(feature = "metric_lines_lf")]
+                LineType::LF => str_indices::lines_lf::to_byte_idx(text, byte_idx),
+                #[cfg(feature = "metric_lines_lf_cr")]
+                LineType::LF_CR => str_indices::lines_crlf::to_byte_idx(text, byte_idx),
+                #[cfg(feature = "metric_lines_unicode")]
+                LineType::Unicode => str_indices::lines::to_byte_idx(text, byte_idx),
+            }
+        };
     }
 
     #[allow(unused)]
@@ -76,66 +96,26 @@ pub(crate) mod lines {
         }
     }
 
-    /// Returns the byte index of the start of the last line of the passed text.
-    ///
-    /// Note: if the text ends in a line break, that means the last line is
-    /// an empty line that starts at the end of the text.
     pub(crate) fn last_line_start_byte_idx(text: &str, line_type: LineType) -> usize {
-        // Silence unused parameter warning with certain feature
-        // configurations.
-        let _ = line_type;
-
-        let mut itr = text.bytes().enumerate().rev();
-
-        while let Some((idx, byte)) = itr.next() {
-            if byte == 0x0A {
-                return idx + 1;
-            }
-
-            // That was the only case for `LineType::LF`, so early out if that's
-            // the line type.
+        let offset = match line_type {
             #[cfg(feature = "metric_lines_lf")]
-            if line_type == LineType::LF {
-                continue;
-            }
-
-            if byte == 0x0D {
-                return idx + 1;
-            }
-
-            // That was the last case for `LineType::LF_CR`, so early out if
-            // that's the line type.
+            LineType::LF => memchr::memrchr(b'\n', text.as_bytes()),
             #[cfg(feature = "metric_lines_lf_cr")]
-            if line_type == LineType::LF_CR {
-                continue;
-            }
+            LineType::LF_CR => memchr::memrchr2(b'\n', b'\r', text.as_bytes()),
+            #[cfg(feature = "metric_lines_unicode")]
+            LineType::Unicode => text.rfind([
+                '\n', '\r', '\u{000B}', '\u{000C}', '\u{0085}', '\u{2028}', '\u{2029}',
+            ]),
+        };
 
-            // Handle the remaining unicode cases.
-            match byte {
-                0x0B | 0x0C => {
-                    return idx + 1;
-                }
-                0x85 => {
-                    if let Some((_, 0xC2)) = itr.next() {
-                        return idx + 1;
-                    }
-                }
-                0xA8 | 0xA9 => {
-                    if let Some((_, 0x80)) = itr.next() {
-                        if let Some((_, 0xE2)) = itr.next() {
-                            return idx + 1;
-                        }
-                    }
-                }
-                _ => {}
-            }
+        match offset {
+            Some(i) => i + 1,
+            None => 0,
         }
-
-        return 0;
     }
 
     /// If there is a trailing line break, returns its byte index.
-    /// Otherwise returns `None`.
+    /// Otherwise, returns `None`.
     ///
     /// Note: a CRLF pair is always treated as a single unit, and thus
     /// this function will return the index of the CR in such cases, even
@@ -189,7 +169,7 @@ pub(crate) mod lines {
         let last_char_byte_idx = crate::floor_char_boundary(text.len() - 1, text);
         let last_char = &text[last_char_byte_idx..];
 
-        // Handle the remaining unicode cases.
+        // Handle the remaining Unicode cases.
         match last_char {
             // - VT (Vertical Tab)
             // - FF (Form Feed)

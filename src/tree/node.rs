@@ -102,7 +102,7 @@ impl Node {
 
     /// Note: `node_info` is the text info *for the node this is being called
     /// on*.  This is because node info for a child is stored in the parent.
-    /// This makes it a little inconvenient to call, but is desireable for
+    /// This makes it a little inconvenient to call, but is desirable for
     /// efficiency so that the info can be used for a cheaper update rather than
     /// being recomputed from scratch.
     ///
@@ -230,7 +230,7 @@ impl Node {
                 let (end_child_i, end_child_left_byte_idx) =
                     children.search_byte_idx_only(byte_idx_range[1], false);
 
-                // Text info of the the start and end children.
+                // Text info of the start and end children.
                 let start_info = children.info()[start_child_i];
                 let end_info = children.info()[end_child_i];
 
@@ -339,8 +339,8 @@ impl Node {
     /// the node tree.
     ///
     /// - `metric_scanner`: a function that scans `Children` to find the
-    ///   child that contains `metric_idx`, returning the child's index and
-    ///   it's left-side accumulated text info within its sublings. See
+    ///   child that contains `metric_idx`, returning the child's index, and
+    ///   it's left-side accumulated text info within its siblings. See
     ///   `Children::search_*_idx()` for methods that do exactly this for
     ///   various metrics.
     /// - `metric_subtractor`: a simple function that subtracts the relevant
@@ -473,7 +473,7 @@ impl Node {
     /// a split would be relevant to the line-counting metrics of `line_type`.
     ///
     /// Specifically, CRLF pairs are not relevant to LF-only line metrics, so
-    /// for that line type this will always return false.  Otherwise it will
+    /// for that line type this will always return false. Otherwise, it will
     /// return if a CRLF pair would be split.
     #[cfg(any(
         feature = "metric_lines_lf",

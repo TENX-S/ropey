@@ -80,7 +80,7 @@ impl Children {
 
     /// Merges two nodes together.
     ///
-    /// Assumes the two nodes are adjecent to each other, with `idx1`
+    /// Assumes the two nodes are adjacent to each other, with `idx1`
     /// preceding `idx2`.
     ///
     /// Note: will panic internally if there's too much data to
@@ -115,7 +115,7 @@ impl Children {
 
     /// Equally distributes the data between two nodes.
     ///
-    /// Assumes the two nodes are adjecent to each other, with `idx1`
+    /// Assumes the two nodes are adjacent to each other, with `idx1`
     /// preceding `idx2`.
     pub fn distribute(&mut self, idx1: usize, idx2: usize) {
         debug_assert_eq!(idx1 + 1, idx2);
@@ -123,7 +123,7 @@ impl Children {
 
         let ((info1, node1), (info2, node2)) = self.get_two_mut(idx1, idx2);
         match (node1, node2) {
-            (Node::Leaf(ref mut text1), Node::Leaf(ref mut text2)) => {
+            (Node::Leaf(text1), Node::Leaf(text2)) => {
                 let text1 = Arc::make_mut(text1);
                 let text2 = Arc::make_mut(text2);
                 text1.distribute(text2);
@@ -132,7 +132,7 @@ impl Children {
                 *info2 = text2.text_info();
             }
 
-            (Node::Internal(ref mut children1), Node::Internal(ref mut children2)) => {
+            (Node::Internal(children1), Node::Internal(children2)) => {
                 let lhs = Arc::make_mut(children1);
                 let rhs = Arc::make_mut(children2);
                 let rhs_target_len = (lhs.len() + rhs.len()) / 2;
@@ -156,9 +156,9 @@ impl Children {
     }
 
     /// Attempts to merge two nodes, and if it's too much data to merge
-    /// equi-distributes the data between the two.
+    /// equip-distributes the data between the two.
     ///
-    /// Assumes the two nodes are adjecent to each other, with `idx1`
+    /// Assumes the two nodes are adjacent to each other, with `idx1`
     /// preceding `idx2`.
     ///
     /// Returns:
@@ -170,11 +170,11 @@ impl Children {
         debug_assert!(idx2 < self.len());
 
         let do_merge = match (&self.nodes()[idx1], &self.nodes()[idx2]) {
-            (Node::Leaf(ref text1), Node::Leaf(ref text2)) => {
+            (Node::Leaf(text1), Node::Leaf(text2)) => {
                 (text1.len() + text2.len()) <= MAX_TEXT_SIZE
             }
 
-            (Node::Internal(ref children1), Node::Internal(ref children2)) => {
+            (Node::Internal(children1), Node::Internal(children2)) => {
                 (children1.len() + children2.len()) <= MAX_CHILDREN
             }
 
@@ -198,7 +198,7 @@ impl Children {
         self.0.pop()
     }
 
-    /// Inserts an item into the the array at the given index.
+    /// Inserts an item into the array at the given index.
     ///
     /// Increases length by one.  Panics if already full.  Preserves ordering
     /// of the other items.
@@ -208,7 +208,7 @@ impl Children {
         self.update_unbalance_flag(idx);
     }
 
-    /// Inserts an element into a the array, and then splits it in half, returning
+    /// Inserts an element into the array, and then splits it in half, returning
     /// the right half.
     ///
     /// This works even when the array is full.
@@ -226,7 +226,7 @@ impl Children {
         self.push_split(extra)
     }
 
-    /// Removes the item at the given index from the the array.
+    /// Removes the item at the given index from the array.
     ///
     /// Decreases length by one.  Preserves ordering of the other items.
     #[inline(always)]
@@ -484,7 +484,7 @@ mod inner {
     }
 
     /// This is essentially a fixed-capacity, stack-allocated `Vec`.  However,
-    /// it actually containts _two_ arrays rather than just one, but which
+    /// it actually contains _two_ arrays rather than just one, but which
     /// share a length.
     #[repr(C)]
     pub(crate) struct ChildrenInternal {
@@ -523,7 +523,7 @@ mod inner {
         pub fn nodes(&self) -> &[Node] {
             // SAFETY: `MaybeUninit<T>` is layout compatible with `T`, and
             // the nodes from `0..len` are guaranteed to be initialized
-            unsafe { mem::transmute(&self.nodes[..(self.len())]) }
+            unsafe { mem::transmute(&self.nodes[..self.len()]) }
         }
 
         /// Mutable access to the nodes array.
@@ -539,7 +539,7 @@ mod inner {
         pub fn info(&self) -> &[TextInfo] {
             // SAFETY: `MaybeUninit<T>` is layout compatible with `T`, and
             // the info from `0..len` are guaranteed to be initialized
-            unsafe { mem::transmute(&self.info[..(self.len())]) }
+            unsafe { mem::transmute(&self.info[..self.len()]) }
         }
 
         /// Mutable access to the info array.
@@ -622,7 +622,7 @@ mod inner {
             })
         }
 
-        /// Inserts an item into the the array at the given index.
+        /// Inserts an item into the array at the given index.
         ///
         /// Increases length by one.  Panics if already full.  Preserves ordering
         /// of the other items.
@@ -656,7 +656,7 @@ mod inner {
             self.len += 1;
         }
 
-        /// Removes the item at the given index from the the array.
+        /// Removes the item at the given index from the array.
         ///
         /// Decreases length by one.  Preserves ordering of the other items.
         pub fn remove(&mut self, idx: usize) -> (TextInfo, Node) {
@@ -901,10 +901,10 @@ mod inner {
                     let a = unsafe { a.assume_init_ref() };
                     let b = unsafe { b.assume_init_ref() };
                     match (a, b) {
-                        (Node::Internal(ref a_arc), Node::Internal(ref b_arc)) => {
+                        (Node::Internal(a_arc), Node::Internal(b_arc)) => {
                             assert!(Arc::ptr_eq(a_arc, b_arc));
                         }
-                        (Node::Leaf(ref a_arc), Node::Leaf(ref b_arc)) => {
+                        (Node::Leaf(a_arc), Node::Leaf(b_arc)) => {
                             assert!(Arc::ptr_eq(a_arc, b_arc));
                         }
                         _ => panic!("Cloned node is not the same type as its source."),

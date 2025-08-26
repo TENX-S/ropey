@@ -52,7 +52,7 @@ impl TextInfo {
     ///
     /// The returned `TextInfo` is identical to what `TextInfo::from_str("")`
     /// would return, but is constructed more efficiently since this can skip
-    /// all of the text scan function calls.
+    /// all the text scan function calls.
     pub(crate) fn new() -> TextInfo {
         TextInfo {
             bytes: 0,

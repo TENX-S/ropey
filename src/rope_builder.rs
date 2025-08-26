@@ -9,7 +9,7 @@ use crate::tree::{Children, Node, Text, MAX_CHILDREN, MAX_TEXT_SIZE, MIN_CHILDRE
 /// chunks.  It is useful for creating ropes from:
 ///
 /// - ...large text files, without pre-loading their entire contents into memory
-///   (but see [`from_reader()`](crate::Rope::from_reader) for a convenience
+///   (but see [`from_reader()`](Rope::from_reader) for a convenience
 ///   function that does this for casual use cases).
 /// - ...streaming data sources.
 /// - ...non-utf8 text data, doing the encoding conversion incrementally
@@ -131,8 +131,8 @@ impl RopeBuilder {
         };
         let root_info = root.text_info();
         Rope {
-            root: root,
-            root_info: root_info,
+            root,
+            root_info,
             byte_range: [0, root_info.bytes],
         }
     }

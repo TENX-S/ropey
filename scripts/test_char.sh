@@ -1,3 +1,3 @@
 #!/bin/sh
 
-cargo test --no-default-features --features "simd, metric_chars" "$@"
+cargo nextest r --no-default-features --features "simd, metric_chars" "$@"

@@ -71,7 +71,7 @@ use crate::{
 
 /// An iterator over a `Rope`'s contiguous `str` chunks.
 ///
-/// Internally, each `Rope` stores text as a segemented collection of utf8
+/// Internally, each `Rope` stores text as a segmented collection of utf8
 /// strings. This iterator iterates over those segments, returning a
 /// `&str` slice for each one.  It is useful for situations such as:
 ///
@@ -140,7 +140,7 @@ impl<'a> Chunks<'a> {
     //---------------------------------------------------------
 
     /// Returns the Chunks iterator as well as the actual start byte of the
-    /// chunk to be yeilded by `next()`, from the start of Node's contents.
+    /// chunk to be yielded by `next()`, from the start of Node's contents.
     ///
     /// Note that all parameters are relative to the entire contents of `node`.
     /// In particular, `at_byte_idx` is NOT relative to `byte_range`, it is an
@@ -156,8 +156,8 @@ impl<'a> Chunks<'a> {
         let at_end = at_byte_idx == byte_range[1];
 
         let chunks = Chunks {
-            cursor: cursor,
-            at_end: at_end,
+            cursor,
+            at_end,
             is_reversed: false,
         };
 
@@ -169,8 +169,8 @@ impl<'a> Chunks<'a> {
         let at_end = at_byte_idx == text.len();
 
         let chunks = Chunks {
-            cursor: cursor,
-            at_end: at_end,
+            cursor,
+            at_end,
             is_reversed: false,
         };
 
@@ -316,7 +316,7 @@ impl<'a> Bytes<'a> {
         let byte_offset = cursor.byte_offset();
 
         Ok(Bytes {
-            cursor: cursor,
+            cursor,
             current_chunk: chunk.as_bytes(),
             chunk_byte_idx: byte_offset,
             byte_idx_in_chunk: at_byte_idx - byte_range[0] - byte_offset,
@@ -471,7 +471,7 @@ impl<'a> Chars<'a> {
         }
 
         Ok(Chars {
-            cursor: cursor,
+            cursor,
             current_chunk: chunk,
             chunk_byte_idx: byte_offset,
             byte_idx_in_chunk: at_byte_idx - byte_range[0] - byte_offset,
@@ -784,10 +784,10 @@ mod lines {
             let leaf_byte_idx = at_byte_idx - cursor.byte_offset();
 
             Ok(Lines {
-                cursor: cursor,
-                line_type: line_type,
-                total_lines: total_lines,
-                leaf_byte_idx: leaf_byte_idx,
+                cursor,
+                line_type,
+                total_lines,
+                leaf_byte_idx,
                 current_line_idx: at_line_idx,
                 is_reversed: false,
             })
@@ -805,8 +805,8 @@ mod lines {
 
             Ok(Lines {
                 cursor: ChunkCursor::from_str(text)?,
-                line_type: line_type,
-                total_lines: total_lines,
+                line_type,
+                total_lines,
                 leaf_byte_idx: at_byte_idx,
                 current_line_idx: at_line_idx,
                 is_reversed: false,
@@ -839,21 +839,21 @@ mod lines {
 
             // Need to advance to another chunk.
             let start_idx = self.cursor.byte_offset() + self.leaf_byte_idx;
-            if let Some((node, info, offset)) = self.cursor.next_with_line_boundary(self.line_type)
+            return if let Some((node, info, offset)) = self.cursor.next_with_line_boundary(self.line_type)
             {
                 self.leaf_byte_idx = lines::to_byte_idx(self.cursor.chunk(), 1, self.line_type);
                 let end_idx = self.cursor.byte_offset() + self.leaf_byte_idx;
                 self.current_line_idx += 1;
                 let start = (start_idx as isize - offset) as usize;
                 let end = (end_idx as isize - offset) as usize;
-                return Some(RopeSlice::new(node, info, [start, end]));
+                Some(RopeSlice::new(node, info, [start, end]))
             } else {
                 // Can't advance, which means we're already at the end.  But
                 // since we're not at the last line (that's caught at the start
                 // of this function) that means there's a final empty line to
                 // return.
                 self.current_line_idx += 1;
-                return Some(self.cursor.chunk_slice().slice(0..0));
+                Some(self.cursor.chunk_slice().slice(0..0))
             }
         }
 

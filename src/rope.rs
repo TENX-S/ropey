@@ -85,7 +85,7 @@ assert_eq!(middle, "lo みん");
 /// Cloning `Rope`s is extremely cheap, running in `O(1)` time and taking a
 /// small constant amount of memory for the new clone, regardless of text size.
 /// This is accomplished by data sharing between `Rope` clones.  The memory used
-/// by clones only grows incrementally as the their contents diverge due to
+/// by clones only grows incrementally as the contents diverge due to
 /// edits.  All of this is thread safe, so clones can be sent freely between
 /// threads.
 ///
@@ -198,14 +198,14 @@ impl Rope {
 
                     // If we're done reading
                     if read_count == 0 {
-                        if fill_idx > 0 {
+                        return if fill_idx > 0 {
                             // We couldn't consume all data.
-                            return Err(io::Error::new(
+                            Err(io::Error::new(
                                 io::ErrorKind::InvalidData,
                                 "stream contained invalid UTF-8",
-                            ));
+                            ))
                         } else {
-                            return Ok(builder.finish());
+                            Ok(builder.finish())
                         }
                     }
                 }
@@ -461,7 +461,7 @@ impl Rope {
     /// NOT PART OF THE PUBLIC API (hidden from docs for a reason!)
     #[doc(hidden)]
     pub fn assert_accurate_text_info(&self) {
-        assert!(self.root_info == self.root.assert_accurate_text_info());
+        assert_eq!(self.root_info, self.root.assert_accurate_text_info());
     }
 
     /// NOT PART OF THE PUBLIC API (hidden from docs for a reason!)
@@ -584,7 +584,7 @@ impl Rope {
             //
             // NOTE: the chunks are at most `MAX_TEXT_SIZE - 4` rather than
             // just `MAX_TEXT_SIZE` to guarantee that nodes can split into
-            // node-sized chunks even in the face of multi-byte chars and
+            // node-sized chunks even in the face of multibyte chars and
             // CRLF pairs that may prevent splits at certain byte indices.
             // This is a subtle issue that in practice only very rarely
             // manifests, but causes panics when it does.  Please do not
@@ -802,14 +802,14 @@ impl Rope {
 // Impls shared between Rope and RopeSlice.
 crate::shared_impl::shared_std_impls!(Rope);
 
-impl std::default::Default for Rope {
+impl Default for Rope {
     #[inline]
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl std::cmp::PartialEq<RopeSlice<'_>> for Rope {
+impl PartialEq<RopeSlice<'_>> for Rope {
     fn eq(&self, other: &RopeSlice) -> bool {
         RopeSlice::from(self) == *other
     }

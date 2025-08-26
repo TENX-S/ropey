@@ -72,7 +72,7 @@ pub mod esoterica {
             }) => Some(Rope {
                 root: root.clone(),
                 root_info: *root_info,
-                byte_range: byte_range,
+                byte_range,
             }),
 
             RopeSlice(SliceInner::Str(_)) => None,

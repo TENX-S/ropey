@@ -39,7 +39,7 @@ struct StackItem<'a> {
 /// # let text = {
 /// # let mut builder = ropey::RopeBuilder::new();
 /// # // Note: `_append_chunk_as_leaf()` is NOT part af the public API.
-/// # // Do not use it outside of Ropey's code base.
+/// # // Do not use it outside Ropey's code base.
 /// # builder._append_chunk_as_leaf("Hello world, h");
 /// # builder._append_chunk_as_leaf("ow are you?");
 /// # builder.finish()
@@ -116,9 +116,9 @@ impl<'a> ChunkCursor<'a> {
 
             stack_idx += 1;
             self.node_stack[stack_idx] = StackItem {
-                node: node,
-                info: info,
-                byte_offset: byte_offset,
+                node,
+                info,
+                byte_offset,
                 child_idx: 0,
             };
         }
@@ -170,9 +170,9 @@ impl<'a> ChunkCursor<'a> {
 
             stack_idx += 1;
             self.node_stack[stack_idx] = StackItem {
-                node: node,
-                info: info,
-                byte_offset: byte_offset,
+                node,
+                info,
+                byte_offset,
                 child_idx: position,
             };
         }
@@ -295,7 +295,7 @@ impl<'a> ChunkCursor<'a> {
         let mut cursor = ChunkCursor {
             node_stack: vec![],
             str_slice: None,
-            byte_range: byte_range,
+            byte_range,
         };
 
         // Find the chunk the contains `at_byte_idx` and set that as the current
@@ -367,7 +367,7 @@ impl<'a> ChunkCursor<'a> {
     /// - A line break character.
     ///
     /// On success returns the common ancestor of the from/to chunks, along
-    /// with its text info and it's byte offset from the start of the text.
+    /// with its text info, and it's byte offset from the start of the text.
     /// Note that the offset may be negative, since the node is not clipped
     /// to the slice boundaries.
     ///
@@ -429,7 +429,7 @@ impl<'a> ChunkCursor<'a> {
             }
         }
 
-        // Store common anscestor for returning later.
+        // Store common ancestor for returning later.
         let top_node = self.node_stack[stack_idx].node;
         let top_info = self.node_stack[stack_idx].info;
         let top_offset =
@@ -539,7 +539,7 @@ impl<'a> ChunkCursor<'a> {
             }
         }
 
-        // Store common anscestor for returning later.
+        // Store common ancestor for returning later.
         let top_node = self.node_stack[stack_idx].node;
         let top_info = self.node_stack[stack_idx].info;
         let top_offset =
@@ -898,7 +898,7 @@ mod tests {
     #[test]
     fn chunk_cursor_at_03() {
         // This tests a subtle corner case where the slice end aligns with
-        // an internal chunk boundary, which would erronerously cause the
+        // an internal chunk boundary, which would erroneously cause the
         // chunk cursor to be created on an empty chunk just *after* the slice
         // contents.  It requires a lot of nodes to trigger, because it needs
         // the tree to have enough depth.

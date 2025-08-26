@@ -238,37 +238,37 @@ impl Text {
 
 //-------------------------------------------------------------
 
-impl std::cmp::Eq for Text {}
+impl Eq for Text {}
 
-impl std::cmp::PartialEq<Text> for Text {
+impl PartialEq<Text> for Text {
     #[inline(always)]
     fn eq(&self, other: &Text) -> bool {
         self.text() == other.text()
     }
 }
 
-impl std::cmp::PartialEq<str> for Text {
+impl PartialEq<str> for Text {
     #[inline(always)]
     fn eq(&self, other: &str) -> bool {
         self.text() == other
     }
 }
 
-impl std::cmp::PartialEq<&str> for Text {
+impl PartialEq<&str> for Text {
     #[inline(always)]
     fn eq(&self, other: &&str) -> bool {
         self == *other
     }
 }
 
-impl std::cmp::PartialEq<Text> for str {
+impl PartialEq<Text> for str {
     #[inline(always)]
     fn eq(&self, other: &Text) -> bool {
         other == self
     }
 }
 
-impl std::cmp::PartialEq<Text> for &str {
+impl PartialEq<Text> for &str {
     #[inline(always)]
     fn eq(&self, other: &Text) -> bool {
         other == self
@@ -815,7 +815,7 @@ mod tests {
         // This tests a corner case where we can't split at the exact
         // desired split point because the left side is just shy of
         // being full and the right side is full and starts with a
-        // multi-byte character.  In a naive implementation of
+        // multibyte character.  In a naive implementation of
         // `distribute()` this case will panic as it tries to move
         // more data into the left side than can fit.
         let mut text_l = String::new();
