@@ -53,34 +53,31 @@ pub(crate) mod lines {
 
     #[inline(always)]
     pub(crate) fn to_byte_idx(text: &str, byte_idx: usize, line_type: LineType) -> usize {
-        return if !cfg!(feature = "metric_lines_unicode") && byte_idx == 1 {
-            #[allow(unused_variables)]
+        #[cfg(not(feature = "metric_lines_unicode"))]
+        if byte_idx == 1 {
             let offset: Option<usize> = match line_type {
                 #[cfg(feature = "metric_lines_lf")]
                 LineType::LF => memchr::memchr(b'\n', text.as_bytes()),
                 #[cfg(feature = "metric_lines_lf_cr")]
                 LineType::LF_CR => memchr::memchr2(b'\n', b'\r', text.as_bytes()),
-                #[allow(unreachable_patterns)]
-                _ => unreachable!(),
             };
 
-            #[allow(unreachable_code)]
-            match offset {
+            return match offset {
                 #[cfg(feature = "metric_lines_lf_cr")]
                 Some(i) if text[i..].starts_with("\r\n") => i + 2,
                 Some(i) => i + 1,
                 None => text.len(),
-            }
-        } else {
-            match line_type {
-                #[cfg(feature = "metric_lines_lf")]
-                LineType::LF => str_indices::lines_lf::to_byte_idx(text, byte_idx),
-                #[cfg(feature = "metric_lines_lf_cr")]
-                LineType::LF_CR => str_indices::lines_crlf::to_byte_idx(text, byte_idx),
-                #[cfg(feature = "metric_lines_unicode")]
-                LineType::Unicode => str_indices::lines::to_byte_idx(text, byte_idx),
-            }
-        };
+            };
+        }
+
+        match line_type {
+            #[cfg(feature = "metric_lines_lf")]
+            LineType::LF => str_indices::lines_lf::to_byte_idx(text, byte_idx),
+            #[cfg(feature = "metric_lines_lf_cr")]
+            LineType::LF_CR => str_indices::lines_crlf::to_byte_idx(text, byte_idx),
+            #[cfg(feature = "metric_lines_unicode")]
+            LineType::Unicode => str_indices::lines::to_byte_idx(text, byte_idx),
+        }
     }
 
     #[allow(unused)]
